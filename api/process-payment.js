@@ -2,15 +2,25 @@ import fs from 'fs';
 import path from 'path';
 
 export default async function handler(req, res) {
-  const { token } = req.body;
+  let body = '';
 
-  try {
-    // Just log the token for now — we’ll decrypt later
-    console.log('🔐 Received payment token:', JSON.stringify(token, null, 2));
+  req.on('data', chunk => {
+    body += chunk;
+  });
 
-    res.status(200).json({ status: 'ok', message: 'Token received' });
-  } catch (err) {
-    console.error('❌ Error handling token:', err);
-    res.status(500).json({ error: 'Failed to process token' });
-  }
+  req.on('end', () => {
+    try {
+      const { token } = JSON.parse(body);
+
+      console.log('🔐 Received payment token:', JSON.stringify(token, null, 2));
+
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ status: 'ok', message: 'Token received' }));
+    } catch (err) {
+      console.error('❌ Error parsing token:', err);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: 'Failed to parse token' }));
+    }
+  });
 }
