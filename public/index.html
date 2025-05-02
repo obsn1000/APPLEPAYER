@@ -51,7 +51,15 @@
         };
 
         session.onpaymentauthorized = (event) => {
-          console.log('✅ Payment token received:', event.payment.token);
+          fetch('/api/process-payment', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ token: event.payment.token })
+})
+.then(res => res.json())
+.then(data => console.log('✅ Server response:', data))
+.catch(err => console.error('❌ Payment error:', err));
+
           session.completePayment(ApplePaySession.STATUS_SUCCESS);
         };
 
