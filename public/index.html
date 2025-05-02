@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apple Pay Demo</title>
+</head>
+<body>
+  <h1>APPLEPAYER</h1>
+  <button id="pay-button">Pay with Apple Pay</button>
+
+  <script>
+    document.getElementById('pay-button').addEventListener('click', () => {
+      if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+        const request = {
+          countryCode: 'US',
+          currencyCode: 'USD',
+          supportedNetworks: ['visa', 'masterCard'],
+          merchantCapabilities: ['supports3DS'],
+          total: {
+            label: 'APPLEPAYER',
+            amount: '10.00'
+          }
+        };
+
+        const session = new ApplePaySession(3, request);
+
+        session.onvalidatemerchant = async (event) => {
+          const response = await fetch('/api/validate-merchant', {
+            method: 'POST',
+            body: JSON.stringify({ validationURL: event.validationURL })
+          });
+          const merchantSession = await response.json();
+          session.completeMerchantValidation(merchantSession);
+        };
+
+        session.onpaymentauthorized = (event) => {
+          console.log('Payment token:', event.payment.token);
+          session.completePayment(ApplePaySession.STATUS_SUCCESS);
+        };
+
+        session.begin();
+      } else {
+        alert("Apple Pay not available");
+      }
+    });
+  </script>
+</body>
+</html>
