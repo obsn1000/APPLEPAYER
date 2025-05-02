@@ -4,10 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Apple Pay Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    #pay-button {
+      font-size: 18px;
+      padding: 15px 30px;
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <h1>APPLEPAYER</h1>
-  <button id="pay-button">Pay with Apple Pay</button>
+  <h1>Pay with Apple Pay</h1>
+  <button id="pay-button">💳 Pay with Apple Pay</button>
 
   <script>
     document.getElementById('pay-button').addEventListener('click', () => {
@@ -35,13 +51,13 @@
         };
 
         session.onpaymentauthorized = (event) => {
-          console.log('Payment token:', event.payment.token);
+          console.log('✅ Payment token received:', event.payment.token);
           session.completePayment(ApplePaySession.STATUS_SUCCESS);
         };
 
         session.begin();
       } else {
-        alert("Apple Pay not available");
+        alert("❌ Apple Pay not available");
       }
     });
   </script>
