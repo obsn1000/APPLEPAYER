@@ -22,8 +22,8 @@
   </style>
 </head>
 <body>
-  <h1>Pay with Apple Pay</h1>
-  <button id="pay-button">💳 Pay with Apple Pay</button>
+  <h1>Pay with Apple Pay (Simulated)</h1>
+  <button id="pay-button">💳 Simulate Apple Pay</button>
 
   <script>
     document.getElementById('pay-button').addEventListener('click', () => {
@@ -50,15 +50,28 @@
           session.completeMerchantValidation(merchantSession);
         };
 
-        session.onpaymentauthorized = (event) => {
+        session.onpaymentauthorized = () => {
+          const fakeToken = {
+            paymentData: {
+              version: "EC_v1",
+              data: "FAKE_ENCRYPTED_DATA_BASE64",
+              signature: "FAKE_SIGNATURE",
+              header: {
+                ephemeralPublicKey: "FAKE_EPHEMERAL_KEY",
+                publicKeyHash: "FAKE_PKH",
+                transactionId: "FAKE_TXN_ID"
+              }
+            }
+          };
+
           fetch('/api/process-payment', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ token: event.payment.token })
-})
-.then(res => res.json())
-.then(data => console.log('✅ Server response:', data))
-.catch(err => console.error('❌ Payment error:', err));
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: fakeToken })
+          })
+          .then(res => res.json())
+          .then(data => console.log('✅ Simulated server response:', data))
+          .catch(err => console.error('❌ Simulated payment error:', err));
 
           session.completePayment(ApplePaySession.STATUS_SUCCESS);
         };
