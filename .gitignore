@@ -1,2 +1,8 @@
 certs/
 .vercel
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj/project.xcworkspace
+*.xcodeproj/xcuserdata
+DerivedData/
+build/
