@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apple Pay Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    #pay-button {
+      font-size: 18px;
+      padding: 15px 30px;
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pay with Apple Pay (Simulated)</h1>
+  <button id="pay-button">💳 Simulate Apple Pay</button>
+
+  <script>
+    document.getElementById('pay-button').addEventListener('click', () => {
+      if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+        const request = {
+          countryCode: 'US',
+          currencyCode: 'USD',
+          supportedNetworks: ['visa', 'masterCard'],
+          merchantCapabilities: ['supports3DS'],
+          total: {
+            label: 'APPLEPAYER',
+            amount: '1.00'
+          }
+        };
+
+        const session = new ApplePaySession(3, request);
+
+        session.onvalidatemerchant = async (event) => {
+          const response = await fetch('/api/validate-merchant', {
+            method: 'POST',
+            body: JSON.stringify({ validationURL: event.validationURL })
+          });
+          const merchantSession = await response.json();
+          session.completeMerchantValidation(merchantSession);
+        };
+
+        session.onpaymentauthorized = () => {
+          const fakeToken = {
+            paymentData: {
+              version: "EC_v1",
+              data: "FAKE_ENCRYPTED_DATA_BASE64",
+              signature: "FAKE_SIGNATURE",
+              header: {
+                ephemeralPublicKey: "FAKE_EPHEMERAL_KEY",
+                publicKeyHash: "FAKE_PKH",
+                transactionId: "FAKE_TXN_ID"
+              }
+            }
+          };
+
+          fetch('/api/process-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: fakeToken })
+          })
+          .then(res => res.json())
+          .then(data => console.log('✅ Simulated server response:', data))
+          .catch(err => console.error('❌ Simulated payment error:', err));
+
+          session.completePayment(ApplePaySession.STATUS_SUCCESS);
+        };
+
+        session.begin();
+      } else {
+        alert("❌ Apple Pay not available");
+      }
+    });
+  </script>
+</body>
+</html>
+<button id="download-config-button">📥 Download Mobile Config</button>
+
+<script>
+  document.getElementById('download-config-button').addEventListener('click', () => {
+    window.location.href = '/api/generate-mobileconfig';
+  });
+</script>
