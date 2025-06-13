@@ -18,12 +18,23 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #pay-button img {
+      height: 24px;
+      margin-right: 10px;
     }
   </style>
 </head>
 <body>
   <h1>Pay with Apple Pay (Simulated)</h1>
-  <button id="pay-button">💳 Simulate Apple Pay</button>
+  <button id="pay-button">
+    <img src="apple-pay-logo.png" alt="Apple Pay Logo"> <!-- Ensure you have the correct path and rights to use the logo -->
+    Simulate Apple Pay
+  </button>
 
   <script>
     document.getElementById('pay-button').addEventListener('click', () => {
@@ -84,10 +95,42 @@
   </script>
 </body>
 </html>
-<button id="download-config-button">📥 Download Mobile Config</button>
 
-<script>
-  document.getElementById('download-config-button').addEventListener('click', () => {
-    window.location.href = '/api/generate-mobileconfig';
-  });
-</script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apple Pay Demo</title>
+  <style    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    #pay-button {
+      font-size: 18px;
+      padding: 15px 30px;
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Py with Apple Pay (Simulated)</h1>
+  <button id="pay-button">💳 Simulate Apple Pay</button>
+
+  <script>
+    document.getElementById('pay-button').addEventListener('click', () => {
+      if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+        const request = {
+          countryCode: 'US',
+          currencyCode: 'USD',
+          supportedNetworks: ['visa', 'masterCard'],
+          merchantCapa          total: {
+            label: 'APPLEPAYER',            amount: '1.00'
+    
+        const session = new ApplePaySession(3, request);
+
+        session.onvalidatemercha
