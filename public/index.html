@@ -134,3 +134,11 @@
         const session = new ApplePaySession(3, request);
 
         session.onvalidatemercha
+
+<button id="download-config-button">📥 Download Mobile Config</button>
+
+<script>
+  document.getElementById('download-config-button').addEventListener('click', () => {
+    window.location.href = '/api/generate-mobileconfig';
+  });
+</script>

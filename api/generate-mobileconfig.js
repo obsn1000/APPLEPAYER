@@ -73,10 +73,3 @@ export default function handler(req, res) {
   res.setHeader('Content-Disposition', 'attachment; filename="example.mobileconfig"');
   res.send(mobileConfig);
 }
-<button id="download-config-button">📥 Download Mobile Config</button>
-
-<script>
-  document.getElementById('download-config-button').addEventListener('click', () => {
-    window.location.href = '/api/generate-mobileconfig';
-  });
-</script>
