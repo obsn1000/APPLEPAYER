@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { requireApiKey } from '@/utils/auth';
-import { generatePass } from '@/utils/passkit';
+import { requireApiKey } from '../../../utils/auth';
+import { generatePass } from '../../../utils/passkit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!requireApiKey(req, res)) return;
