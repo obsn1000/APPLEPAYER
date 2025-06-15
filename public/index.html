@@ -10,7 +10,7 @@
       text-align: center;
       padding: 50px;
     }
-    #pay-button {
+    #pay-button, #download-config-button, #generate-kban-button {
       font-size: 18px;
       padding: 15px 30px;
       background-color: black;
@@ -22,21 +22,38 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      margin: 10px;
     }
     #pay-button img {
       height: 24px;
       margin-right: 10px;
     }
+    .button-container {
+      margin-top: 30px;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
   </style>
 </head>
 <body>
-  <h1>Pay with Apple Pay (Simulated)</h1>
-  <button id="pay-button">
-    <img src="apple-pay-logo.png" alt="Apple Pay Logo"> <!-- Ensure you have the correct path and rights to use the logo -->
-    Simulate Apple Pay
-  </button>
+  <h1>ApplePaySDK Demo</h1>
+  
+  <div class="button-container">
+    <button id="pay-button">
+      <img src="apple-pay-logo.png" alt="Apple Pay Logo"> 
+      Simulate Apple Pay
+    </button>
+
+    <button id="download-config-button">📥 Download Mobile Config</button>
+    
+    <button id="generate-kban-button">🔑 Generate K/BAN</button>
+  </div>
+
+  <div id="kban-result" style="margin-top: 20px; font-weight: bold;"></div>
 
   <script>
+    // Apple Pay simulation
     document.getElementById('pay-button').addEventListener('click', () => {
       if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
         const request = {
@@ -89,56 +106,39 @@
 
         session.begin();
       } else {
-        alert("❌ Apple Pay not available");
+        alert("❌ Apple Pay not available in this browser");
+      }
+    });
+
+    // Download mobile config
+    document.getElementById('download-config-button').addEventListener('click', () => {
+      window.location.href = '/api/generate-mobileconfig';
+    });
+
+    // Generate K/BAN
+    document.getElementById('generate-kban-button').addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/kban/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to generate K/BAN');
+        }
+        
+        const data = await response.json();
+        document.getElementById('kban-result').textContent = `Generated K/BAN: ${data.kban}`;
+        
+        // Ask if user wants to create a pass
+        if (confirm('K/BAN generated successfully! Would you like to create an Apple Wallet pass with this K/BAN?')) {
+          window.location.href = `/api/pass/create?kban=${data.kban}`;
+        }
+      } catch (error) {
+        console.error('Error generating K/BAN:', error);
+        alert('Failed to generate K/BAN. See console for details.');
       }
     });
   </script>
 </body>
 </html>
-
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Apple Pay Demo</title>
-  <style    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 50px;
-    }
-    #pay-button {
-      font-size: 18px;
-      padding: 15px 30px;
-      background-color: black;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <h1>Py with Apple Pay (Simulated)</h1>
-  <button id="pay-button">💳 Simulate Apple Pay</button>
-
-  <script>
-    document.getElementById('pay-button').addEventListener('click', () => {
-      if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
-        const request = {
-          countryCode: 'US',
-          currencyCode: 'USD',
-          supportedNetworks: ['visa', 'masterCard'],
-          merchantCapa          total: {
-            label: 'APPLEPAYER',            amount: '1.00'
-    
-        const session = new ApplePaySession(3, request);
-
-        session.onvalidatemercha
-
-<button id="download-config-button">📥 Download Mobile Config</button>
-
-<script>
-  document.getElementById('download-config-button').addEventListener('click', () => {
-    window.location.href = '/api/generate-mobileconfig';
-  });
-</script>
