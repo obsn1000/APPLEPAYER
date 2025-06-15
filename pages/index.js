@@ -320,8 +320,8 @@ export default function Home() {
             Simulate Apple Pay
           </button>
 
-          <button id="download-config-button" className="button" aria-label="Download mobile configuration file">
-            <span aria-hidden="true">📥</span> Download Mobile Config
+          <button id="download-config-button" className="button" aria-label="Setup mobile access">
+            <span aria-hidden="true">�</span> Setup Mobile Access
           </button>
           
           <button id="generate-kban-button" className="button" aria-label="Generate a new K/BAN code">
