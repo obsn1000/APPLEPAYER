@@ -1,11 +1,12 @@
 {
+  "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
+  "/api/generate-mobileconfig": "pages/api/generate-mobileconfig.js",
   "/api/kban/assign": "pages/api/kban/assign.js",
   "/api/kban/generate": "pages/api/kban/generate.js",
   "/api/kban/validate": "pages/api/kban/validate.js",
   "/api/pass/create": "pages/api/pass/create.js",
   "/": "pages/index.html",
-  "/_app": "pages/_app.js",
   "/_document": "pages/_document.js",
   "/404": "pages/404.html"
 }

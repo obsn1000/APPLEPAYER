@@ -28,10 +28,19 @@ function handler(req, res) {
     if (!(0,_utils_auth__WEBPACK_IMPORTED_MODULE_1__/* .requireApiKey */ .m)(req, res)) return;
     if (req.method !== "POST") return res.status(405).end();
     const { kban  } = req.body;
-    const valid = (0,_utils_kban__WEBPACK_IMPORTED_MODULE_0__/* .validateKban */ .D)(kban);
-    res.status(200).json({
-        valid
-    });
+    const valid = (0,_utils_kban__WEBPACK_IMPORTED_MODULE_0__/* .validateKban */ .Ds)(kban);
+    if (valid) {
+        // Parse the input to provide additional context
+        const parsedData = (0,_utils_kban__WEBPACK_IMPORTED_MODULE_0__/* .parseReapwareInput */ .eD)(kban);
+        res.status(200).json({
+            valid: true,
+            data: parsedData
+        });
+    } else {
+        res.status(200).json({
+            valid: false
+        });
+    }
 }
 
 

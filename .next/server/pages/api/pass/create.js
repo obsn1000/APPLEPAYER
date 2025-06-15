@@ -16,8 +16,6 @@ __webpack_require__.d(__webpack_exports__, {
   "default": () => (/* binding */ handler)
 });
 
-// EXTERNAL MODULE: ./utils/auth.ts
-var auth = __webpack_require__(171);
 ;// CONCATENATED MODULE: external "passbook"
 const external_passbook_namespaceObject = require("passbook");
 var external_passbook_default = /*#__PURE__*/__webpack_require__.n(external_passbook_namespaceObject);
@@ -122,21 +120,33 @@ const template = new (external_passbook_default())({
 
 ;// CONCATENATED MODULE: ./pages/api/pass/create.ts
 
-
 async function handler(req, res) {
-    if (!(0,auth/* requireApiKey */.m)(req, res)) return;
-    if (req.method !== "POST") return res.status(405).end();
-    const { kban  } = req.body;
-    if (!kban) return res.status(400).json({
-        error: "K/BAN required"
-    });
+    // Skip API key requirement for mobile compatibility
+    // if (!requireApiKey(req, res)) return;
+    // Support both GET and POST for mobile compatibility
+    if (req.method !== "POST" && req.method !== "GET") {
+        return res.status(405).json({
+            error: "Method not allowed"
+        });
+    }
+    // Get kban from query params (for GET) or body (for POST)
+    const kban = req.method === "GET" ? req.query.kban : req.body?.kban;
+    if (!kban || typeof kban !== "string") {
+        return res.status(400).json({
+            error: "K/BAN required"
+        });
+    }
     try {
         const pkpassBuffer = await generatePass(kban);
+        // Set headers for mobile compatibility
         res.setHeader("Content-Type", "application/vnd.apple.pkpass");
-        res.setHeader("Content-Disposition", `attachment; filename=${kban}.pkpass`);
+        res.setHeader("Content-Disposition", `attachment; filename=${kban.substring(0, 20)}.pkpass`);
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Expires", "0");
         res.status(200).send(pkpassBuffer);
     } catch (err) {
-        console.error(err);
+        console.error("Pass generation error:", err);
         res.status(500).json({
             error: "Failed to generate Wallet pass"
         });
@@ -153,7 +163,7 @@ async function handler(req, res) {
 var __webpack_require__ = require("../../../webpack-api-runtime.js");
 __webpack_require__.C(exports);
 var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-var __webpack_exports__ = __webpack_require__.X(0, [171], () => (__webpack_exec__(455)));
+var __webpack_exports__ = (__webpack_exec__(455));
 module.exports = __webpack_exports__;
 
 })();

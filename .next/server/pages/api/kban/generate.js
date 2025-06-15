@@ -27,7 +27,7 @@ __webpack_require__.r(__webpack_exports__);
 function handler(req, res) {
     if (!(0,_utils_auth__WEBPACK_IMPORTED_MODULE_1__/* .requireApiKey */ .m)(req, res)) return;
     if (req.method !== "POST") return res.status(405).end();
-    const kban = (0,_utils_kban__WEBPACK_IMPORTED_MODULE_0__/* .generateKban */ .H)();
+    const kban = (0,_utils_kban__WEBPACK_IMPORTED_MODULE_0__/* .generateKban */ .Hh)();
     res.status(200).json({
         kban
     });
