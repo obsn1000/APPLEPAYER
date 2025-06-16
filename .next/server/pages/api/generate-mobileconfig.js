@@ -26,56 +26,101 @@ __webpack_require__.r(__webpack_exports__);
                 error: "Method not allowed"
             });
         }
-        // Mobile configuration XML content
-        const mobileConfigContent = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>PayloadContent</key>
-    <array>
-        <dict>
-            <key>PayloadDescription</key>
-            <string>ApplePaySDK Configuration</string>
-            <key>PayloadDisplayName</key>
-            <string>Apple Pay SDK</string>
-            <key>PayloadIdentifier</key>
-            <string>com.applepaysdk.config</string>
-            <key>PayloadType</key>
-            <string>com.apple.security.root</string>
-            <key>PayloadUUID</key>
-            <string>${generateUUID()}</string>
-            <key>PayloadVersion</key>
-            <integer>1</integer>
-        </dict>
-    </array>
-    <key>PayloadDescription</key>
-    <string>Install this profile to configure Apple Pay SDK settings</string>
-    <key>PayloadDisplayName</key>
-    <string>ApplePaySDK Configuration</string>
-    <key>PayloadIdentifier</key>
-    <string>com.applepaysdk.profile</string>
-    <key>PayloadRemovalDisallowed</key>
-    <false/>
-    <key>PayloadType</key>
-    <string>Configuration</string>
-    <key>PayloadUUID</key>
-    <string>${generateUUID()}</string>
-    <key>PayloadVersion</key>
-    <integer>1</integer>
-</dict>
-</plist>`;
-        // Set appropriate headers for mobile config file
-        res.setHeader("Content-Type", "application/x-apple-aspen-config");
-        res.setHeader("Content-Disposition", "attachment; filename=applepaysdk-config.mobileconfig");
+        // For development - redirect to add to home screen instead of unsigned profile
+        // This avoids signature validation issues
+        const baseUrl = req.headers.host ? `https://${req.headers.host}` : "https://applepaysdk.vercel.app";
+        // Return HTML with instructions instead of .mobileconfig
+        const instructionHTML = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ApplePaySDK - Mobile Setup</title>
+        <style>
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+                padding: 20px; 
+                max-width: 500px; 
+                margin: 0 auto;
+                background: #f5f5f7;
+            }
+            .card {
+                background: white;
+                border-radius: 12px;
+                padding: 24px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                margin-bottom: 16px;
+            }
+            .button {
+                display: inline-block;
+                background: #007AFF;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                text-decoration: none;
+                text-align: center;
+                font-weight: 500;
+                margin: 8px 0;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .step {
+                margin: 12px 0;
+                padding: 12px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border-left: 4px solid #007AFF;
+            }
+            .emoji { font-size: 24px; margin-right: 8px; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1><span class="emoji">🍎</span>ApplePaySDK Mobile</h1>
+            <p>Add ApplePaySDK to your iPhone home screen for easy AMID processing:</p>
+            
+            <div class="step">
+                <strong>Step 1:</strong> Tap the Share button <span style="font-size: 18px;">⎘</span> in Safari
+            </div>
+            
+            <div class="step">
+                <strong>Step 2:</strong> Select "Add to Home Screen" 
+            </div>
+            
+            <div class="step">
+                <strong>Step 3:</strong> Tap "Add" to confirm
+            </div>
+            
+            <a href="${baseUrl}" class="button">
+                🚀 Open ApplePaySDK App
+            </a>
+            
+            <div style="margin-top: 20px; padding: 16px; background: #fff3cd; border-radius: 8px; font-size: 14px;">
+                <strong>Note:</strong> Mobile configuration profiles require signing certificates for production use. 
+                For development, using "Add to Home Screen" provides the same functionality.
+            </div>
+        </div>
+        
+        <script>
+            // Auto-redirect to main app after 5 seconds
+            setTimeout(() => {
+                window.location.href = '${baseUrl}';
+            }, 5000);
+        </script>
+    </body>
+    </html>`;
+        // Set HTML headers
+        res.setHeader("Content-Type", "text/html");
         res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         res.setHeader("Pragma", "no-cache");
         res.setHeader("Expires", "0");
-        // Send the mobile configuration
-        res.status(200).send(mobileConfigContent);
+        // Send the instruction page
+        res.status(200).send(instructionHTML);
     } catch (error) {
-        console.error("Error generating mobile config:", error);
+        console.error("Error generating mobile setup:", error);
         res.status(500).json({
-            error: "Failed to generate mobile configuration",
+            error: "Failed to generate mobile setup",
             message:  false ? 0 : undefined
         });
     }

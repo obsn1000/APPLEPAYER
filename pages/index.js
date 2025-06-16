@@ -1,6 +1,14 @@
 import Head from 'next/head'
+import { useState, useEffect } from 'react'
+import DOMPurify from 'isomorphic-dompurify'
 
 export default function Home() {
+  const [generatedKban, setGeneratedKban] = useState(null);
+  const [resultContent, setResultContent] = useState('');
+  const [resultType, setResultType] = useState('');
+  const [showResult, setShowResult] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+
   return (
     <>
       <Head>
@@ -10,9 +18,9 @@ export default function Home() {
         <title>Apple Pay Demo</title>
         <style>{`
           :root {
-            --primary-color: #000;
+            --primary-color: #0070c9;
             --secondary-color: #333;
-            --accent-color: #0070c9;
+            --accent-color: #5ac8fa;
             --success-color: #34c759;
             --error-color: #ff3b30;
             --text-color: #fff;
@@ -321,7 +329,7 @@ export default function Home() {
           </button>
 
           <button id="download-config-button" className="button" aria-label="Setup mobile access">
-            <span aria-hidden="true">�</span> Setup Mobile Access
+            <span aria-hidden="true">📱</span> Setup Mobile Access
           </button>
           
           <button id="generate-kban-button" className="button" aria-label="Generate a new K/BAN code">
@@ -329,314 +337,368 @@ export default function Home() {
           </button>
         </div>
 
-        <div id="result" className="result hidden">
-          <div id="result-content"></div>
-          <div id="result-actions" className="button-container hidden">
-            <button id="create-pass-button" className="button" aria-label="Create Apple Wallet pass">
-              Create Wallet Pass
-            </button>
-            <button id="copy-kban-button" className="button" aria-label="Copy K/BAN to clipboard">
-              Copy K/BAN
-            </button>
+        {showResult && (
+          <div className={`result ${resultType}`}>
+            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(resultContent) }} />
+            {showActions && (
+              <div className="button-container">
+                <button id="create-pass-button" className="button" aria-label="Create Apple Wallet pass">
+                  Create Wallet Pass
+                </button>
+                <button id="copy-kban-button" className="button" aria-label="Copy K/BAN to clipboard">
+                  Copy K/BAN
+                </button>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
       
       <div id="notification" className="notification" role="alert"></div>
-
-      <script dangerouslySetInnerHTML={{
-        __html: `
-          // Utility functions
-          function showNotification(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = \`notification \${type}\`;
-            notification.classList.add('show');
-            
-            // Remove notification after 3 seconds
-            setTimeout(() => {
-              notification.classList.remove('show');
-            }, 3000);
-          }
-          
-          function showResult(content, type = '') {
-            const resultElement = document.getElementById('result');
-            const resultContent = document.getElementById('result-content');
-            
-            resultContent.innerHTML = content;
-            resultElement.className = \`result \${type}\`;
-            resultElement.classList.remove('hidden');
-          }
-          
-          function hideResult() {
-            const resultElement = document.getElementById('result');
-            resultElement.classList.add('hidden');
-            document.getElementById('result-actions').classList.add('hidden');
-          }
-          
-          function setButtonLoading(buttonId, isLoading) {
-            const button = document.getElementById(buttonId);
-            
-            if (isLoading) {
-              const spinner = document.createElement('div');
-              spinner.className = 'spinner';
-              button.prepend(spinner);
-              button.disabled = true;
-            } else {
-              const spinner = button.querySelector('.spinner');
-              if (spinner) {
-                button.removeChild(spinner);
-              }
-              button.disabled = false;
-            }
-          }
-
-          // Wait for DOM to be ready
-          document.addEventListener('DOMContentLoaded', function() {
-            
-            // Process reapware pass
-            document.getElementById('process-pass-button').addEventListener('click', async () => {
-              try {
-                const passInput = document.getElementById('reapware-pass-input');
-                const passValue = passInput.value.trim();
-                
-                if (!passValue) {
-                  throw new Error('Please enter a pass/code from reapware');
-                }
-                
-                hideResult();
-                setButtonLoading('process-pass-button', true);
-                
-                // First validate the pass
-                const validateResponse = await fetch('/api/kban/validate', {
-                  method: 'POST',
-                  headers: { 
-                    'Content-Type': 'application/json',
-                    'X-API-Key': 'test_api_key_for_development'
-                  },
-                  body: JSON.stringify({ kban: passValue })
-                });
-                
-                if (!validateResponse.ok) {
-                  const errorData = await validateResponse.json();
-                  throw new Error(errorData.error || \`Validation failed with status \${validateResponse.status}\`);
-                }
-                
-                const validationData = await validateResponse.json();
-                
-                if (validationData.valid) {
-                  const data = validationData.data;
-                  
-                  if (data.type === 'amid') {
-                    // Display AMID merchant data
-                    showNotification('Apple Merchant ID validated!', 'success');
-                    showResult(\`
-                      <h3>✅ Apple Merchant ID (AMID) Validated</h3>
-                      <div class="kban-details">
-                        <p><strong>AMID:</strong> <code>\${data.amid}</code></p>
-                        <p><strong>Status:</strong> <span class="status-valid">\${data.isValid ? 'Valid Merchant' : 'Pending'}</span></p>
-                        <p><strong>Account:</strong> \${data.accountNumber}</p>
-                        <p><strong>Bank Code:</strong> \${data.bankCode}</p>
-                        <p><strong>Merchant ID:</strong> \${data.merchantId}</p>
-                      </div>
-                      <div class="next-steps">
-                        <h4>Available Actions:</h4>
-                        <ul>
-                          <li>📱 Create Apple Wallet Pass</li>
-                          <li>📋 Copy AMID to clipboard</li>
-                          <li>💳 Process merchant payment</li>
-                          <li>🏪 Configure merchant settings</li>
-                        </ul>
-                      </div>
-                    \`, 'success');
-                    
-                    // Store the AMID for pass generation
-                    window.generatedKban = data.amid;
-                  } else {
-                    // Display simple pass validation
-                    showNotification('Pass validated successfully!', 'success');
-                    showResult(\`
-                      <h3>✅ Pass Validated</h3>
-                      <div class="kban-details">
-                        <p><strong>Pass:</strong> <code>\${data.value}</code></p>
-                        <p><strong>Status:</strong> <span class="status-valid">Valid</span></p>
-                      </div>
-                      <div class="next-steps">
-                        <h4>Available Actions:</h4>
-                        <ul>
-                          <li>📱 Create Apple Wallet Pass</li>
-                          <li>📋 Copy to clipboard</li>
-                        </ul>
-                      </div>
-                    \`, 'success');
-                    
-                    window.generatedKban = data.value;
-                  }
-                  
-                  // Show action buttons
-                  const actionsContainer = document.getElementById('result-actions');
-                  actionsContainer.classList.remove('hidden');
-                  
-                  // Store the pass for later use
-                  window.generatedKban = passValue;
-                  
-                  // Clear the input
-                  passInput.value = '';
-                } else {
-                  showNotification('Invalid K/BAN', 'error');
-                  showResult(\`
-                    <h3>❌ K/BAN Validation Failed</h3>
-                    <p>The K/BAN code is not valid or may have expired.</p>
-                    <div class="troubleshoot">
-                      <h4>Troubleshooting:</h4>
-                      <ul>
-                        <li>Ensure reapware completed successfully</li>
-                        <li>Check if K/BAN was copied completely</li>
-                        <li>Verify Apple Pay provisioning succeeded</li>
-                      </ul>
-                    </div>
-                  \`, 'error');
-                }
-                
-              } catch (error) {
-                console.error('Error processing pass:', error);
-                showNotification('Failed to process pass', 'error');
-                showResult(\`<h3>Processing Failed</h3><p>\${error.message}</p>\`, 'error');
-              } finally {
-                setButtonLoading('process-pass-button', false);
-              }
-            });
-            
-            // Allow Enter key to process pass
-            document.getElementById('reapware-pass-input').addEventListener('keypress', function(event) {
-              if (event.key === 'Enter') {
-                document.getElementById('process-pass-button').click();
-              }
-            });
-            // Generate K/BAN
-            document.getElementById('generate-kban-button').addEventListener('click', async () => {
-              try {
-                hideResult();
-                setButtonLoading('generate-kban-button', true);
-                
-                const response = await fetch('/api/kban/generate', {
-                  method: 'POST',
-                  headers: { 
-                    'Content-Type': 'application/json',
-                    'X-API-Key': 'test_api_key_for_development'
-                  }
-                });
-                
-                if (!response.ok) {
-                  const errorData = await response.json();
-                  throw new Error(errorData.error || \`Failed with status \${response.status}\`);
-                }
-                
-                const data = await response.json();
-                showNotification('K/BAN generated successfully', 'success');
-                showResult(\`<h3>Generated K/BAN</h3><p id="kban-value">\${data.kban}</p><p>Generated at: \${data.timestamp || new Date().toISOString()}</p>\`, 'success');
-                
-                // Show action buttons
-                const actionsContainer = document.getElementById('result-actions');
-                actionsContainer.classList.remove('hidden');
-                
-                // Store the K/BAN for later use
-                window.generatedKban = data.kban;
-              } catch (error) {
-                console.error('Error generating K/BAN:', error);
-                showNotification('Failed to generate K/BAN', 'error');
-                showResult(\`<h3>K/BAN Generation Failed</h3><p>\${error.message}</p>\`, 'error');
-              } finally {
-                setButtonLoading('generate-kban-button', false);
-              }
-            });
-
-            // Download mobile config
-            document.getElementById('download-config-button').addEventListener('click', () => {
-              try {
-                hideResult();
-                setButtonLoading('download-config-button', true);
-                
-                showNotification('Downloading configuration file...', 'info');
-                
-                // Create an iframe to handle the download
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = '/api/generate-mobileconfig';
-                document.body.appendChild(iframe);
-                
-                // Remove the iframe after download starts
-                setTimeout(() => {
-                  document.body.removeChild(iframe);
-                  setButtonLoading('download-config-button', false);
-                  showNotification('Download started', 'success');
-                  showResult('<h3>Configuration File</h3><p>Your mobile configuration file download has started.</p>', 'success');
-                }, 1000);
-              } catch (error) {
-                console.error('Download error:', error);
-                showNotification('Download failed', 'error');
-                showResult(\`<h3>Download Failed</h3><p>\${error.message}</p>\`, 'error');
-                setButtonLoading('download-config-button', false);
-              }
-            });
-
-            // Create pass button
-            document.getElementById('create-pass-button').addEventListener('click', async () => {
-              try {
-                if (!window.generatedKban) {
-                  throw new Error('No K/BAN available');
-                }
-                
-                setButtonLoading('create-pass-button', true);
-                showNotification('Creating Apple Wallet pass...', 'info');
-                
-                // Create an iframe to handle the download
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = \`/api/pass/create?kban=\${window.generatedKban}\`;
-                document.body.appendChild(iframe);
-                
-                // Remove the iframe after download starts
-                setTimeout(() => {
-                  document.body.removeChild(iframe);
-                  setButtonLoading('create-pass-button', false);
-                  showNotification('Pass download started', 'success');
-                }, 1000);
-              } catch (error) {
-                console.error('Error creating pass:', error);
-                showNotification('Failed to create pass', 'error');
-                setButtonLoading('create-pass-button', false);
-              }
-            });
-            
-            // Copy K/BAN button
-            document.getElementById('copy-kban-button').addEventListener('click', () => {
-              try {
-                if (!window.generatedKban) {
-                  throw new Error('No K/BAN available to copy');
-                }
-                
-                navigator.clipboard.writeText(window.generatedKban)
-                  .then(() => {
-                    showNotification('K/BAN copied to clipboard', 'success');
-                  })
-                  .catch((error) => {
-                    console.error('Clipboard error:', error);
-                    showNotification('Failed to copy to clipboard', 'error');
-                  });
-              } catch (error) {
-                showNotification(error.message, 'error');
-              }
-            });
-
-            // Apple Pay simulation (simplified for demo)
-            document.getElementById('pay-button').addEventListener('click', async () => {
-              showNotification('Apple Pay simulation would require real certificates', 'info');
-              showResult('<h3>Apple Pay Demo</h3><p>This would initiate Apple Pay in a real environment with proper certificates.</p>', 'success');
-            });
-          });
-        `
-      }} />
     </>
   )
+
+  // Custom hooks and effects
+  useEffect(() => {
+    // Notification system
+    const showNotification = (message, type = 'info') => {
+      const notification = document.getElementById('notification');
+      if (notification) {
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.classList.add('show');
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, 3000);
+      }
+    };
+
+    // Button loading state handler
+    const setButtonLoading = (buttonId, isLoading) => {
+      const button = document.getElementById(buttonId);
+      if (!button) return;
+      
+      if (isLoading) {
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner';
+        button.prepend(spinner);
+        button.disabled = true;
+      } else {
+        const spinner = button.querySelector('.spinner');
+        if (spinner) {
+          button.removeChild(spinner);
+        }
+        button.disabled = false;
+      }
+    };
+
+    // Display result content
+    const displayResult = (content, type = '') => {
+      setResultContent(content);
+      setResultType(type);
+      setShowResult(true);
+    };
+
+    // Hide result
+    const hideResultDisplay = () => {
+      setShowResult(false);
+      setShowActions(false);
+    };
+
+    // Process AMID validation
+    const processAmid = async () => {
+      try {
+        const passInput = document.getElementById('reapware-pass-input');
+        if (!passInput) return;
+        
+        const passValue = passInput.value.trim();
+        
+        if (!passValue) {
+          throw new Error('Please enter a pass/code from reapware');
+        }
+        
+        // Try to parse JSON if it's in JSON format
+        try {
+          JSON.parse(passValue);
+        } catch (e) {
+          // If not valid JSON, check if it's at least a valid string format
+          if (!passValue.match(/^[A-Za-z0-9-]+$/)) {
+            throw new Error('Please enter valid AMID data');
+          }
+        }
+        
+        hideResultDisplay();
+        setButtonLoading('process-pass-button', true);
+        
+        // Validate the pass
+        const validateResponse = await fetch('/api/kban/validate', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            // Use environment variable in production
+            'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || 'test_api_key_for_development'
+          },
+          body: JSON.stringify({ kban: passValue })
+        });
+        
+        if (!validateResponse.ok) {
+          const errorData = await validateResponse.json();
+          throw new Error(errorData.error || `Validation failed with status ${validateResponse.status}`);
+        }
+        
+        const validationData = await validateResponse.json();
+        
+        if (validationData.valid) {
+          const data = validationData.data;
+          
+          if (data.type === 'amid') {
+            // Display AMID merchant data
+            showNotification('Apple Merchant ID validated!', 'success');
+            displayResult(`
+              <h3>✅ Apple Merchant ID (AMID) Validated</h3>
+              <div class="kban-details">
+                <p><strong>AMID:</strong> <code>${data.amid}</code></p>
+                <p><strong>Status:</strong> <span class="status-valid">${data.isValid ? 'Valid Merchant' : 'Pending'}</span></p>
+                <p><strong>Account:</strong> ${data.accountNumber}</p>
+                <p><strong>Bank Code:</strong> ${data.bankCode}</p>
+                <p><strong>Merchant ID:</strong> ${data.merchantId}</p>
+              </div>
+              <div class="next-steps">
+                <h4>Available Actions:</h4>
+                <ul>
+                  <li>📱 Create Apple Wallet Pass</li>
+                  <li>📋 Copy AMID to clipboard</li>
+                  <li>💳 Process merchant payment</li>
+                  <li>🏪 Configure merchant settings</li>
+                </ul>
+              </div>
+            `, 'success');
+            
+            // Store the AMID for pass generation
+            setGeneratedKban(data.amid);
+          } else {
+            // Display simple pass validation
+            showNotification('Pass validated successfully!', 'success');
+            displayResult(`
+              <h3>✅ Pass Validated</h3>
+              <div class="kban-details">
+                <p><strong>Pass:</strong> <code>${data.value}</code></p>
+                <p><strong>Status:</strong> <span class="status-valid">Valid</span></p>
+              </div>
+              <div class="next-steps">
+                <h4>Available Actions:</h4>
+                <ul>
+                  <li>📱 Create Apple Wallet Pass</li>
+                  <li>📋 Copy to clipboard</li>
+                </ul>
+              </div>
+            `, 'success');
+            
+            setGeneratedKban(data.value);
+          }
+          
+          // Show action buttons
+          setShowActions(true);
+          
+          // Clear the input
+          passInput.value = '';
+        } else {
+          showNotification('Invalid K/BAN', 'error');
+          displayResult(`
+            <h3>❌ K/BAN Validation Failed</h3>
+            <p>The K/BAN code is not valid or may have expired.</p>
+            <div class="troubleshoot">
+              <h4>Troubleshooting:</h4>
+              <ul>
+                <li>Ensure reapware completed successfully</li>
+                <li>Check if K/BAN was copied completely</li>
+                <li>Verify Apple Pay provisioning succeeded</li>
+              </ul>
+            </div>
+          `, 'error');
+        }
+        
+      } catch (error) {
+        console.error('Error processing pass:', error);
+        showNotification('Failed to process pass', 'error');
+        displayResult(`<h3>Processing Failed</h3><p>${error.message}</p>`, 'error');
+      } finally {
+        setButtonLoading('process-pass-button', false);
+      }
+    };
+
+    // Generate K/BAN
+    const generateKban = async () => {
+      try {
+        hideResultDisplay();
+        setButtonLoading('generate-kban-button', true);
+        
+        const response = await fetch('/api/kban/generate', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || 'test_api_key_for_development'
+          }
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Failed with status ${response.status}`);
+        }
+        
+        const data = await response.json();
+        showNotification('K/BAN generated successfully', 'success');
+        displayResult(`<h3>Generated K/BAN</h3><p id="kban-value">${data.kban}</p><p>Generated at: ${data.timestamp || new Date().toISOString()}</p>`, 'success');
+        
+        // Show action buttons
+        setShowActions(true);
+        
+        // Store the K/BAN for later use
+        setGeneratedKban(data.kban);
+      } catch (error) {
+        console.error('Error generating K/BAN:', error);
+        showNotification('Failed to generate K/BAN', 'error');
+        displayResult(`<h3>K/BAN Generation Failed</h3><p>${error.message}</p>`, 'error');
+      } finally {
+        setButtonLoading('generate-kban-button', false);
+      }
+    };
+
+    // Download mobile config
+    const downloadMobileConfig = () => {
+      try {
+        hideResultDisplay();
+        setButtonLoading('download-config-button', true);
+        
+        showNotification('Downloading configuration file...', 'info');
+        
+        // Create a download link instead of iframe
+        const link = document.createElement('a');
+        link.href = '/api/generate-mobileconfig';
+        link.download = 'apple-pay-config.mobileconfig';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => {
+          setButtonLoading('download-config-button', false);
+          showNotification('Download started', 'success');
+          displayResult('<h3>Configuration File</h3><p>Your mobile configuration file download has started.</p>', 'success');
+        }, 1000);
+      } catch (error) {
+        console.error('Download error:', error);
+        showNotification('Download failed', 'error');
+        displayResult(`<h3>Download Failed</h3><p>${error.message}</p>`, 'error');
+        setButtonLoading('download-config-button', false);
+      }
+    };
+
+    // Create wallet pass
+    const createWalletPass = async () => {
+      try {
+        if (!generatedKban) {
+          throw new Error('No K/BAN available');
+        }
+        
+        setButtonLoading('create-pass-button', true);
+        showNotification('Creating Apple Wallet pass...', 'info');
+        
+        // Create a download link instead of iframe
+        const link = document.createElement('a');
+        link.href = `/api/pass/create?kban=${generatedKban}`;
+        link.download = 'apple-wallet-pass.pkpass';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => {
+          setButtonLoading('create-pass-button', false);
+          showNotification('Pass download started', 'success');
+        }, 1000);
+      } catch (error) {
+        console.error('Error creating pass:', error);
+        showNotification('Failed to create pass', 'error');
+        setButtonLoading('create-pass-button', false);
+      }
+    };
+
+    // Copy K/BAN to clipboard
+    const copyKbanToClipboard = () => {
+      try {
+        if (!generatedKban) {
+          throw new Error('No K/BAN available to copy');
+        }
+        
+        navigator.clipboard.writeText(generatedKban)
+          .then(() => {
+            showNotification('K/BAN copied to clipboard', 'success');
+          })
+          .catch((error) => {
+            console.error('Clipboard error:', error);
+            showNotification('Failed to copy to clipboard', 'error');
+          });
+      } catch (error) {
+        showNotification(error.message, 'error');
+      }
+    };
+
+    // Simulate Apple Pay
+    const simulateApplePay = () => {
+      showNotification('Apple Pay simulation would require real certificates', 'info');
+      displayResult('<h3>Apple Pay Demo</h3><p>This would initiate Apple Pay in a real environment with proper certificates.</p>', 'success');
+    };
+
+    // Set up event listeners
+    const processButton = document.getElementById('process-pass-button');
+    if (processButton) {
+      processButton.addEventListener('click', processAmid);
+    }
+
+    const passInput = document.getElementById('reapware-pass-input');
+    if (passInput) {
+      passInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          processAmid();
+        }
+      });
+    }
+
+    const generateButton = document.getElementById('generate-kban-button');
+    if (generateButton) {
+      generateButton.addEventListener('click', generateKban);
+    }
+
+    const downloadButton = document.getElementById('download-config-button');
+    if (downloadButton) {
+      downloadButton.addEventListener('click', downloadMobileConfig);
+    }
+
+    const createPassButton = document.getElementById('create-pass-button');
+    if (createPassButton) {
+      createPassButton.addEventListener('click', createWalletPass);
+    }
+
+    const copyButton = document.getElementById('copy-kban-button');
+    if (copyButton) {
+      copyButton.addEventListener('click', copyKbanToClipboard);
+    }
+
+    const payButton = document.getElementById('pay-button');
+    if (payButton) {
+      payButton.addEventListener('click', simulateApplePay);
+    }
+
+    // Cleanup function to remove event listeners
+    return () => {
+      if (processButton) processButton.removeEventListener('click', processAmid);
+      if (passInput) passInput.removeEventListener('keypress', processAmid);
+      if (generateButton) generateButton.removeEventListener('click', generateKban);
+      if (downloadButton) downloadButton.removeEventListener('click', downloadMobileConfig);
+      if (createPassButton) createPassButton.removeEventListener('click', createWalletPass);
+      if (copyButton) copyButton.removeEventListener('click', copyKbanToClipboard);
+      if (payButton) payButton.removeEventListener('click', simulateApplePay);
+    };
+  }, [generatedKban]); // Re-run effect when generatedKban changes
 }
