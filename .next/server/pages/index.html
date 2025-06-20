@@ -1,0 +1,222 @@
+<!DOCTYPE html><html><head><meta charSet="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="description" content="ApplePaySDK Demo - Simulate Apple Pay, generate K/BAN codes, and download mobile configurations"/><title>Apple Pay Demo</title><style>
+          :root {
+            --primary-color: #0070c9;
+            --secondary-color: #333;
+            --accent-color: #5ac8fa;
+            --success-color: #34c759;
+            --error-color: #ff3b30;
+            --text-color: #fff;
+            --background-color: #f5f5f7;
+          }
+          
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, &#x27;Segoe UI&#x27;, Roboto, Oxygen, Ubuntu, Cantarell, &#x27;Open Sans&#x27;, &#x27;Helvetica Neue&#x27;, sans-serif;
+            text-align: center;
+            padding: 50px 20px;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--secondary-color);
+            line-height: 1.5;
+          }
+          
+          .container {
+            max-width: 800px;
+            margin: 0 auto;
+          }
+          
+          .button {
+            font-size: 18px;
+            padding: 15px 30px;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            font-weight: 500;
+          }
+          
+          .button:hover {
+            background-color: #005bb5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 112, 201, 0.3);
+          }
+          
+          .button:active {
+            transform: translateY(0);
+          }
+          
+          .button-container {
+            margin: 30px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+          }
+          
+          .pass-input {
+            width: 100%;
+            max-width: 500px;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: &#x27;Monaco&#x27;, &#x27;Menlo&#x27;, &#x27;Ubuntu Mono&#x27;, monospace;
+            resize: vertical;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+          }
+          
+          .pass-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 112, 201, 0.1);
+          }
+          
+          .input-section {
+            margin: 30px 0;
+            padding: 25px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+          
+          .input-section h2 {
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            font-size: 20px;
+            font-weight: 500;
+          }
+          
+          .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+          }
+          
+          .integration-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+          }
+          
+          .result {
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            max-width: 100%;
+            overflow-wrap: break-word;
+          }
+          
+          .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+          }
+          
+          .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+          }
+          
+          .result pre {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+            margin: 10px 0;
+          }
+          
+          .result h3 {
+            margin-top: 0;
+            color: inherit;
+          }
+          
+          .result ul {
+            margin: 10px 0;
+            padding-left: 20px;
+          }
+          
+          .result li {
+            margin: 5px 0;
+          }
+          
+          .result strong {
+            font-weight: 600;
+          }
+          
+          h1 {
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            font-weight: 300;
+          }
+          
+          .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            display: block;
+          }
+          
+          @media (max-width: 768px) {
+            body {
+              padding: 20px 10px;
+            }
+            
+            .button {
+              font-size: 16px;
+              padding: 12px 20px;
+              margin: 5px;
+            }
+            
+            .button-container {
+              flex-direction: column;
+              align-items: center;
+            }
+            
+            .pass-input {
+              font-size: 12px;
+            }
+            
+            h1 {
+              font-size: 2em;
+            }
+            
+            .input-container {
+              flex-direction: column;
+              align-items: stretch;
+            }
+            
+            .input-section {
+              padding: 20px;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .container {
+              padding: 0 10px;
+            }
+            
+            .input-section {
+              margin: 20px 0;
+              padding: 15px;
+            }
+            
+            .pass-input {
+              height: 100px;
+            }
+          }
+        </style><meta name="next-head-count" content="5"/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js"></script><script src="/_next/static/chunks/webpack-69bfa6990bb9e155.js" defer=""></script><script src="/_next/static/chunks/framework-5f4595e5518b5600.js" defer=""></script><script src="/_next/static/chunks/main-5231dfecb738efdd.js" defer=""></script><script src="/_next/static/chunks/pages/_app-dc14f8483464b560.js" defer=""></script><script src="/_next/static/chunks/299-e94edfdbd93d0258.js" defer=""></script><script src="/_next/static/chunks/pages/index-8e8d924df8950a76.js" defer=""></script><script src="/_next/static/g5d0gIwJSmOsUpfr12TQf/_buildManifest.js" defer=""></script><script src="/_next/static/g5d0gIwJSmOsUpfr12TQf/_ssgManifest.js" defer=""></script></head><body><div id="__next" data-reactroot=""><div class="container"><h1>ApplePaySDK Demo</h1><div class="input-section"><h2>🍎 Apple Merchant Integration</h2><p>Paste the AMID (Apple Merchant ID) JSON data from reapware after successful merchant provisioning:</p><div class="input-container"><textarea id="reapware-pass-input" placeholder="Paste AMID JSON from reapware: {&quot;amid&quot;: &quot;M90160068-4578440258079768&quot;, &quot;bank_name&quot;: &quot;&quot;, &quot;account_number&quot;: &quot;0258079768&quot;, ...}" class="pass-input" rows="4"></textarea><button id="process-pass-button" class="button" aria-label="Process Apple Pay AMID"><span aria-hidden="true">🔐</span> Validate AMID</button></div><div class="integration-info"><small><strong>Flow:</strong> Reapware → Apple Pay API → AMID Generation → Merchant Validation → Wallet Integration</small></div></div><div class="button-container"><button id="pay-button" class="button" aria-label="Simulate Apple Pay payment"><span aria-hidden="true">🍎</span>Simulate Apple Pay</button><button id="download-config-button" class="button" aria-label="Setup mobile access"><span aria-hidden="true">📱</span> Setup Mobile Access</button><button id="generate-kban-button" class="button" aria-label="Generate a new K/BAN code"><span aria-hidden="true">🔑</span> Generate K/BAN</button></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/","query":{},"buildId":"g5d0gIwJSmOsUpfr12TQf","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>
