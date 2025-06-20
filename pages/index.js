@@ -300,7 +300,7 @@ export default function Home() {
       <div className="container">
         <h1>ApplePaySDK Demo</h1>
         
-        <div className="input-section">
+        <div className="input-section" style={{display: 'block', visibility: 'visible'}}>
           <h2>🍎 Apple Merchant Integration</h2>
           <p>Paste the AMID (Apple Merchant ID) JSON data from reapware after successful merchant provisioning:</p>
           <div className="input-container">
