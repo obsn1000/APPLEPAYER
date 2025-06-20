@@ -1,6 +1,6 @@
 {
   "formatVersion": 1,
-  "passTypeIdentifier": "pass.com.reapnet.wallet",
+  "passTypeIdentifier": "pass.com.reap.card",
   "teamIdentifier": "REAPNET",
   "organizationName": "REAPNET",
   "description": "REAPNET Desktop Integration Pass",
@@ -18,21 +18,26 @@
     ],
     "secondaryFields": [
       {
-        "key": "created",
-        "label": "CREATED",
-        "value": "PLACEHOLDER"
+        "key": "amid",
+        "label": "AMID",
+        "value": "M32662659-1976148969917405"
       },
       {
-        "key": "source",
-        "label": "SOURCE",
-        "value": "REAPNET DESKTOP"
+        "key": "account",
+        "label": "ACCOUNT",
+        "value": "8969917405"
       }
     ],
     "auxiliaryFields": [
       {
+        "key": "bank_code",
+        "label": "BANK CODE",
+        "value": "M32"
+      },
+      {
         "key": "status",
         "label": "STATUS",
-        "value": "ACTIVE"
+        "value": "Valid"
       }
     ]
   },
@@ -49,6 +54,16 @@
     "source": "reapnet-desktop",
     "version": "2.0.4",
     "platform": "linux",
-    "integration": "applepayer"
+    "integration": "applepayer",
+    "amid": "M32662659-1976148969917405",
+    "bank_name": "",
+    "account_number": "8969917405",
+    "bank_code": "M32",
+    "country": "",
+    "checksum": "",
+    "bban": "",
+    "amid_isvalid": "Valid",
+    "merchant_id": "merchant.com.yourcompany.store",
+    "pass_id": "pass.com.reap.card::e5fdab"
   }
 }

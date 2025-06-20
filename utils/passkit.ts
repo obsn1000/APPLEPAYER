@@ -14,7 +14,7 @@ const CERTS = {
 
 // Get configuration from environment variables or use defaults
 const TEAM_ID = process.env.APPLE_TEAM_ID || 'REPLACE_WITH_YOUR_TEAM_ID';
-const PASS_TYPE_ID = process.env.PASS_TYPE_ID || 'pass.com.applepayer';
+const PASS_TYPE_ID = process.env.PASS_TYPE_ID || 'pass.com.reap.card';
 const CERT_PASSPHRASE = process.env.CERT_PASSPHRASE || '';
 const ORG_NAME = process.env.ORGANIZATION_NAME || 'APPLEPAYER';
 
@@ -48,10 +48,10 @@ export async function generatePass(kban: string): Promise<Buffer> {
       throw new Error('Invalid K/BAN provided');
     }
     
-    // Create a unique serial number for this pass
-    const serialNumber = `applepayer-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+    // Create a unique serial number for this pass using the found ID format
+    const serialNumber = `e5fdab-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     
-    // Create the pass with the provided K/BAN
+    // Create the pass with the provided K/BAN and AMID details
     const pass = template.createPass({
       serialNumber,
       description: `${ORG_NAME} Wallet K/BAN`,
@@ -65,16 +65,30 @@ export async function generatePass(kban: string): Promise<Buffer> {
           label: 'K/BAN', 
           value: kban 
         }],
-        secondaryFields: [{ 
-          key: 'created', 
-          label: 'CREATED', 
-          value: new Date().toLocaleDateString() 
-        }],
-        auxiliaryFields: [{ 
-          key: 'status', 
-          label: 'STATUS', 
-          value: 'ACTIVE' 
-        }]
+        secondaryFields: [
+          { 
+            key: 'amid', 
+            label: 'AMID', 
+            value: 'M32662659-1976148969917405' 
+          },
+          { 
+            key: 'account', 
+            label: 'ACCOUNT', 
+            value: '8969917405' 
+          }
+        ],
+        auxiliaryFields: [
+          { 
+            key: 'bank_code', 
+            label: 'BANK CODE', 
+            value: 'M32' 
+          },
+          { 
+            key: 'status', 
+            label: 'STATUS', 
+            value: 'Valid' 
+          }
+        ]
       },
       // Add a QR code containing the K/BAN
       barcode: {
@@ -82,6 +96,20 @@ export async function generatePass(kban: string): Promise<Buffer> {
         format: 'PKBarcodeFormatQR',
         messageEncoding: 'iso-8859-1',
         altText: kban
+      },
+      // Add AMID and banking details to userInfo for programmatic access
+      userInfo: {
+        amid: 'M32662659-1976148969917405',
+        bank_name: '',
+        account_number: '8969917405',
+        bank_code: 'M32',
+        country: '',
+        checksum: '',
+        bban: '',
+        amid_isvalid: 'Valid',
+        merchant_id: 'merchant.com.yourcompany.store',
+        kban: kban,
+        pass_id: 'pass.com.reap.card::e5fdab'
       }
     });
 
