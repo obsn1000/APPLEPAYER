@@ -82,13 +82,19 @@ export default function Home() {
       return;
     }
 
-    // Clean up common JSON formatting issues
+    // Add braces if missing
+    if (!amidData.startsWith('{')) {
+      amidData = '{' + amidData + '}';
+    }
+
+    // Clean up JSON formatting
     amidData = amidData
-      .replace(/'/g, '"')  // Replace single quotes with double quotes
-      .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')  // Add quotes around unquoted keys
-      .replace(/:\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*([,}])/g, ': "$1"$2')  // Add quotes around unquoted string values
-      .replace(/,\s*}/g, '}')  // Remove trailing commas
-      .replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+      .replace(/'/g, '"')
+      .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
+      .replace(/:\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*([,}])/g, ': "$1"$2')
+      .replace(/,\s*}/g, '}')
+      .replace(/,\s*]/g, ']')
+      .replace(/("amid_isvalid"\s*:\s*"Valid"\s*,\s*)"amid_isvalid"(\s*:\s*"[^"]*")/g, '$1"merchant_id"$2');
 
     try {
       const parsedData = JSON.parse(amidData);
@@ -435,7 +441,7 @@ export default function Home() {
   "checksum": "",
   "bban": "",
   "amid_isvalid": "Valid",
-  "merchant_id": "merchant.com.yourcompany.store"
+  "merchant_id": "merchant.APPLEPAYER"
 }'
               className="pass-input"
               rows="6"
