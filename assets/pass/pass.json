@@ -1,0 +1,47 @@
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.com.applepaysdk.reapnet",
+  "teamIdentifier": "APPLEPAYSDK",
+  "organizationName": "ApplePaySDK",
+  "description": "REAPNET Wallet Pass",
+  "logoText": "REAPNET",
+  "foregroundColor": "rgb(255, 255, 255)",
+  "backgroundColor": "rgb(0, 122, 255)",
+  "labelColor": "rgb(255, 255, 255)",
+  "generic": {
+    "primaryFields": [
+      {
+        "key": "kban",
+        "label": "K/BAN CODE",
+        "value": "PLACEHOLDER"
+      }
+    ],
+    "secondaryFields": [
+      {
+        "key": "created",
+        "label": "CREATED",
+        "value": "PLACEHOLDER"
+      },
+      {
+        "key": "source",
+        "label": "SOURCE",
+        "value": "REAPNET"
+      }
+    ],
+    "auxiliaryFields": [
+      {
+        "key": "status",
+        "label": "STATUS",
+        "value": "ACTIVE"
+      }
+    ]
+  },
+  "barcode": {
+    "message": "PLACEHOLDER",
+    "format": "PKBarcodeFormatQR",
+    "messageEncoding": "iso-8859-1",
+    "altText": "REAPNET Pass"
+  },
+  "webServiceURL": "http://localhost:3000/api/pass",
+  "authenticationToken": "PLACEHOLDER"
+}

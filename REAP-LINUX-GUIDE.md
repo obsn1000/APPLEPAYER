@@ -1,73 +1,186 @@
-# Using ApplePaySDK with reap-linux
+# REAPNET Integration Guide
 
-This guide explains how to use the ApplePaySDK alongside reap-linux without modifying reap-linux.
+This guide explains how to integrate the APPLEPAYER project with the REAPNET desktop application for seamless Apple Pay and Wallet Pass management.
 
-## Setup Instructions
+## Overview
 
-1. **Install dependencies**:
-   ```
-   cd /home/kali/ApplePaySDK
-   npm install
-   ```
+The APPLEPAYER project provides web-based Apple Pay integration and Wallet Pass generation that works perfectly with the REAPNET desktop application. This integration allows you to:
 
-2. **Configure environment variables**:
-   ```
-   cp .env.example .env
-   ```
-   Then edit the `.env` file with your actual API keys and certificates.
+- Generate mobile configuration profiles for iOS devices
+- Create Apple Wallet passes with K/BAN codes from REAPNET
+- Provide a web interface for Apple Pay processing
+- Bridge REAPNET desktop app with mobile iOS functionality
 
-3. **Add required certificates**:
-   Place the following certificate files in the `/home/kali/ApplePaySDK/certs` directory:
-   - apple-pay-cert.pem
-   - apple-pay-key.pem
-   - apple-root-ca.pem
-   - wwdr.pem
-   - signingCert.pem
-   - signingKey.pem
+## Quick Start
 
-## Running the SDK
+### 1. Start APPLEPAYER Server
 
-Start the SDK in development mode:
-```
+```bash
+cd /home/kali/APPLEPAYER
 npm run dev
 ```
 
-This will start a web server on port 3000.
+The server will start at `http://localhost:3000`
 
-## Using with reap-linux
+### 2. Launch REAPNET Desktop App
 
-1. **Run both applications separately**:
-   - Keep reap-linux running as normal
-   - Run ApplePaySDK on port 3000
+```bash
+cd /home/kali/Desktop/reap-linux-new
+./REAPNET
+```
 
-2. **Access the ApplePaySDK interface**:
-   - Open your web browser to `http://localhost:3000`
-   - Use the interface to:
-     - Generate K/BAN codes
-     - Create Apple Wallet passes
-     - Download mobile configuration files
+REAPNET will automatically load the APPLEPAYER web interface at `localhost:3000`
 
-3. **Download generated files**:
-   - When you generate a pass or configuration file, it will download to your computer
-   - You can then use these files as needed
+### 3. Configure iOS Device
 
-## Features
+#### Option A: Mobile Configuration Profile (Advanced)
+1. On your iPhone, visit: `http://localhost:3000/api/reapnet-config`
+2. Download and install the configuration profile
+3. Trust the profile in Settings > General > VPN & Device Management
 
-### 1. Generate K/BAN Codes
-K/BAN codes are unique identifiers that can be used for transactions or user identification.
+#### Option B: Add to Home Screen (Recommended)
+1. On your iPhone, visit: `http://localhost:3000`
+2. Tap the Share button and select "Add to Home Screen"
+3. The REAPNET web app will be available as a native-like app
 
-### 2. Create Apple Wallet Passes
-Generate passes that can be added to Apple Wallet on iOS devices.
+## API Endpoints
 
-### 3. Process Apple Pay Payments
-Simulate Apple Pay payments (requires proper certificates for production use).
+### Mobile Configuration
+- **URL**: `http://localhost:3000/api/reapnet-config`
+- **Method**: GET
+- **Description**: Downloads a `.mobileconfig` file for iOS device setup
+- **Parameters**:
+  - `deviceId` (optional): Device identifier
+  - `reapnetUrl` (optional): Custom REAPNET URL
 
-### 4. Generate Mobile Configuration Files
-Create configuration files that can be installed on iOS devices.
+### Wallet Pass Generation
+- **URL**: `http://localhost:3000/api/reapnet-pass`
+- **Method**: POST
+- **Description**: Generates a `.pkpass` file for Apple Wallet
+- **Body**:
+  ```json
+  {
+    "kban": "K/BAN code from REAPNET",
+    "deviceId": "optional device ID",
+    "reapnetId": "optional REAPNET session ID"
+  }
+  ```
 
-## Important Notes
+### General Mobile Setup
+- **URL**: `http://localhost:3000/api/generate-mobileconfig`
+- **Method**: GET
+- **Description**: Provides setup instructions and configuration options
 
-- This setup keeps reap-linux completely untouched
-- All ApplePaySDK functionality is accessed through your web browser
-- No modifications to reap-linux are required
-- All generated files are downloaded to your computer and can be used separately
+## File Structure
+
+### Mobile Configuration Files
+- `/assets/reapnet.mobileconfig` - Template configuration file
+- `/pages/api/reapnet-config.js` - Dynamic configuration generator
+- `/pages/api/generate-mobileconfig.js` - General mobile setup
+
+### Wallet Pass Files
+- `/assets/pass/pass.json` - Pass template
+- `/pages/api/reapnet-pass.js` - Pass generator
+- `/utils/passkit.ts` - Pass generation utilities
+
+### Integration Files
+- `/reapnet-bridge.js` - Bridge script for data exchange
+- `/public/reapnet.html` - REAPNET-specific web interface
+
+## Configuration Details
+
+### Mobile Configuration Profile Features
+- **Web Clip**: Adds REAPNET as a home screen app
+- **Safari Settings**: Optimizes browser for Apple Pay
+- **App Permissions**: Enables Wallet and Apple Pay functionality
+- **Security Settings**: Configures appropriate access levels
+
+### Wallet Pass Features
+- **K/BAN Display**: Shows the K/BAN code prominently
+- **QR Code**: Contains REAPNET-specific data for scanning
+- **Branding**: REAPNET colors and styling
+- **Updates**: Web service integration for pass updates
+
+## Usage Workflow
+
+### 1. REAPNET Desktop → APPLEPAYER Web
+1. Launch REAPNET desktop application
+2. REAPNET loads `http://localhost:3000` automatically
+3. Use the web interface for Apple Pay processing
+4. Generate K/BAN codes through REAPNET functionality
+
+### 2. Web → Mobile Configuration
+1. Visit `http://localhost:3000/api/generate-mobileconfig` on iPhone
+2. Follow setup instructions
+3. Either install configuration profile or add to home screen
+
+### 3. K/BAN → Wallet Pass
+1. Obtain K/BAN code from REAPNET processing
+2. Use the web interface to generate a wallet pass
+3. Pass is automatically downloaded to iPhone
+4. Add to Apple Wallet for easy access
+
+## Troubleshooting
+
+### Configuration Profile Issues
+- **Unsigned Profile Warning**: Normal for development - use "Add to Home Screen" instead
+- **Installation Fails**: Check iOS version compatibility (iOS 12+)
+- **Profile Not Trusted**: Go to Settings > General > VPN & Device Management
+
+### Wallet Pass Issues
+- **Pass Won't Install**: Ensure certificates are properly configured in `/certs/`
+- **Pass Appears Blank**: Check pass.json template and data formatting
+- **Updates Not Working**: Verify web service URL and authentication token
+
+### REAPNET Integration Issues
+- **REAPNET Won't Load**: Ensure APPLEPAYER server is running on port 3000
+- **Data Not Syncing**: Check bridge script and temporary file permissions
+- **Mobile Config Not Working**: Verify URL accessibility from mobile device
+
+## Development Notes
+
+### Certificates Required
+For production use, you'll need:
+- Apple Developer Certificate
+- Pass Type ID Certificate
+- WWDR Intermediate Certificate
+
+### Environment Variables
+```bash
+PASS_AUTH_SECRET=your-secret-key
+NODE_ENV=development
+```
+
+### Testing
+```bash
+# Test mobile config generation
+curl http://localhost:3000/api/reapnet-config
+
+# Test pass generation
+curl -X POST http://localhost:3000/api/reapnet-pass \
+  -H "Content-Type: application/json" \
+  -d '{"kban":"TEST123456"}'
+```
+
+## Security Considerations
+
+- Mobile configuration profiles should be signed for production
+- Use HTTPS in production environments
+- Implement proper authentication for pass generation
+- Validate all input data from REAPNET
+- Store certificates securely
+
+## Support
+
+For issues with:
+- **APPLEPAYER**: Check the main project documentation
+- **REAPNET**: Refer to REAPNET desktop application documentation
+- **iOS Integration**: Consult Apple's Configuration Profile documentation
+- **Wallet Passes**: Review Apple's PassKit documentation
+
+## Version Compatibility
+
+- **iOS**: 12.0 or later
+- **REAPNET**: All versions that support localhost:3000
+- **Node.js**: 14.0 or later
+- **Browsers**: Safari (iOS), Chrome, Firefox, Edge

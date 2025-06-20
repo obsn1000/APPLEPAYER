@@ -52,3 +52,11 @@ if (fs.existsSync(reapnetOutputPath)) {
 
 console.log('\n🌐 APPLEPAYER is running at: http://localhost:3000');
 console.log('📱 Paste the JSON data into the AMID input field');
+console.log('\n🔗 REAPNET Integration URLs:');
+console.log('   📄 Mobile Config: http://localhost:3000/api/reapnet-config');
+console.log('   🎫 Generate Pass: http://localhost:3000/api/reapnet-pass');
+console.log('\n💡 To connect REAPNET to APPLEPAYER:');
+console.log('   1. Start APPLEPAYER: npm run dev');
+console.log('   2. Open REAPNET (it will load localhost:3000)');
+console.log('   3. Use the mobile config URL on your iPhone');
+console.log('   4. Generate passes with K/BAN codes from REAPNET');

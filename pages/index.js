@@ -656,6 +656,132 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="input-section">
+          <h2>🔗 REAPNET Integration</h2>
+          <p>Connect with REAPNET desktop application for seamless K/BAN and Apple Pay integration:</p>
+          <div className="button-container">
+            <a href="/reapnet.html" className="button" target="_blank">
+              <span aria-hidden="true">🖥️</span> Open REAPNET Interface
+            </a>
+            <a href="/api/reapnet-config" className="button">
+              <span aria-hidden="true">📄</span> Download REAPNET Config
+            </a>
+          </div>
+          <div className="integration-info">
+            <small>
+              <strong>REAPNET Flow:</strong> Desktop App → K/BAN Generation → Mobile Config → Wallet Pass → Apple Pay Integration
+            </small>
+          </div>
+        </div>
+
+        <div className="input-section">
+          <h2>🔗 REAPNET Integration</h2>
+          <p>Connect with REAPNET desktop application for seamless K/BAN and Apple Pay integration:</p>
+          <div className="button-container">
+            <a href="/reapnet.html" className="button" target="_blank">
+              <span aria-hidden="true">🖥️</span> Open REAPNET Interface
+            </a>
+            <a href="/api/reapnet-config" className="button">
+              <span aria-hidden="true">📄</span> Download REAPNET Config
+            </a>
+          </div>
+          <div className="integration-info">
+            <small>
+              <strong>REAPNET Flow:</strong> Desktop App → K/BAN Generation → Mobile Config → Wallet Pass → Apple Pay Integration
+            </small>
+          </div>
+        </div>
+
+        <div className="input-section">
+          <h2>🔗 REAPNET Integration</h2>
+          <p>Connect with REAPNET desktop application for seamless K/BAN and Apple Pay integration:</p>
+          <div className="button-container">
+            <a href="/reapnet.html" className="button" target="_blank">
+              <span aria-hidden="true">🖥️</span> Open REAPNET Interface
+            </a>
+            <a href="/api/reapnet-config" className="button">
+              <span aria-hidden="true">📄</span> Download REAPNET Config
+            </a>
+          </div>
+          <div className="integration-info">
+            <small>
+              <strong>REAPNET Flow:</strong> Desktop App → K/BAN Generation → Mobile Config → Wallet Pass → Apple Pay Integration
+            </small>
+          </div>
+        </div>
+
+        <div className="input-section">
+          <h2>🔗 REAPNET Integration</h2>
+          <p>Connect with REAPNET desktop application for seamless K/BAN and Apple Pay integration:</p>
+          <div className="button-container">
+            <a href="/reapnet.html" className="button" target="_blank">
+              <span aria-hidden="true">🖥️</span> Open REAPNET Interface
+            </a>
+            <a href="/api/reapnet-config" className="button">
+              <span aria-hidden="true">📄</span> Download REAPNET Config
+            </a>
+          </div>
+          <div className="integration-info">
+            <small>
+              <strong>REAPNET Flow:</strong> Desktop App → K/BAN Generation → Mobile Config → Wallet Pass → Apple Pay Integration
+            </small>
+          </div>
+        </div>
+
+        <div className="input-section">
+          <h2>🔗 REAPNET Integration</h2>
+          <p>Connect with REAPNET desktop application for seamless K/BAN and Apple Pay integration:</p>
+          <div className="button-container">
+            <a href="/reapnet.html" className="button" target="_blank">
+              <span aria-hidden="true">🖥️</span> Open REAPNET Interface
+            </a>
+            <a href="/api/reapnet-config" className="button">
+              <span aria-hidden="true">📄</span> Download REAPNET Config
+            </a>
+          </div>
+          <div className="integration-info">
+            <small>
+              <strong>REAPNET Flow:</strong> Desktop App → K/BAN Generation → Mobile Config → Wallet Pass → Apple Pay Integration
+            </small>
+          </div>
+        </div>
+
+        <div className="input-section">
+          <h2>🔗 REAPNET Integration</h2>
+          <p>Connect with REAPNET desktop application for seamless K/BAN and Apple Pay integration:</p>
+          <div className="button-container">
+            <a href="/reapnet.html" className="button" target="_blank">
+              <span aria-hidden="true">🖥️</span> Open REAPNET Interface
+            </a>
+            <a href="/api/reapnet-config" className="button">
+              <span aria-hidden="true">📄</span> Download REAPNET Config
+            </a>
+          </div>
+          <div className="integration-info">
+            <small>
+              <strong>REAPNET Flow:</strong> Desktop App → K/BAN Generation → Mobile Config → Wallet Pass → Apple Pay Integration
+            </small>
+          </div>
+        </div>
+
+        <div className="input-section">
+          <h2>🔗 REAPNET Integration</h2>
+          <p>Connect with REAPNET desktop application for seamless K/BAN and Apple Pay integration:</p>
+          <div className="button-container">
+            <a href="/reapnet.html" className="button" target="_blank">
+              <span aria-hidden="true">🖥️</span> Open REAPNET Interface
+            </a>
+            <a href="/api/reapnet-config" className="button">
+              <span aria-hidden="true">📄</span> Download REAPNET Config
+            </a>
+          </div>
+          <div className="integration-info">
+            <small>
+              <strong>REAPNET Flow:</strong> Desktop App → K/BAN Generation → Mobile Config → Wallet Pass → Apple Pay Integration
+            </small>
+          </div>
+        </div>
+
         <div className="button-container">
           <button id="pay-button" className="button" aria-label="Add Card to Apple Pay" onClick={initiateApplePayCardAddition}>
             <span aria-hidden="true">🍎</span> 

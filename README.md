@@ -10,6 +10,7 @@ This SDK provides integration with Apple Pay for web applications, allowing you 
 - **Apple Wallet Passes**: Create and distribute passes for Apple Wallet
 - **K/BAN Generation**: Generate and validate secure K/BAN codes
 - **Mobile Configuration**: Create and distribute mobile configuration files
+- **REAPNET Integration**: Seamless integration with REAPNET desktop application
 - **Security**: Implements rate limiting and secure API authentication
 - **Modern UI**: Clean, responsive interface with proper error handling
 

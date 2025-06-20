@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAPNET Mobile Interface</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: 0 auto;
+            background: linear-gradient(135deg, #007AFF, #0051D5);
+            color: white;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .button {
+            display: block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: #FF9500;
+            border-color: #FF9500;
+        }
+        .button.primary:hover {
+            background: #FF8C00;
+        }
+        .input-group {
+            margin: 16px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: rgba(52, 199, 89, 0.2);
+            border: 1px solid rgba(52, 199, 89, 0.5);
+        }
+        .status.error {
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.5);
+        }
+        .emoji { font-size: 24px; margin-right: 8px; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1><span class="emoji">🔗</span>REAPNET Mobile</h1>
+        <p>Connect your iPhone to REAPNET for Apple Pay integration</p>
+    </div>
+
+    <div class="card">
+        <h2><span class="emoji">📱</span>Quick Setup</h2>
+        <div class="grid">
+            <a href="/api/reapnet-config" class="button primary">
+                📄 Install Config
+            </a>
+            <a href="#" onclick="showPassGenerator()" class="button">
+                🎫 Create Pass
+            </a>
+        </div>
+    </div>
+
+    <div class="card" id="passGenerator" style="display: none;">
+        <h3><span class="emoji">🎫</span>Generate Wallet Pass</h3>
+        <div class="input-group">
+            <label for="kbanInput">K/BAN Code:</label>
+            <input type="text" id="kbanInput" placeholder="Enter K/BAN code from REAPNET" />
+        </div>
+        <div class="input-group">
+            <label for="deviceInput">Device ID (Optional):</label>
+            <input type="text" id="deviceInput" placeholder="Your device identifier" />
+        </div>
+        <button onclick="generatePass()" class="button primary">
+            Generate Pass
+        </button>
+        <div id="passStatus"></div>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">ℹ️</span>Instructions</h3>
+        <ol style="padding-left: 20px;">
+            <li><strong>Install Config:</strong> Tap "Install Config" to add REAPNET to your home screen</li>
+            <li><strong>Create Pass:</strong> Enter K/BAN codes from REAPNET to generate wallet passes</li>
+            <li><strong>Use Passes:</strong> Generated passes will appear in Apple Wallet</li>
+            <li><strong>Apple Pay:</strong> Use passes for Apple Pay transactions</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">🔧</span>REAPNET Status</h3>
+        <div id="reapnetStatus">
+            <div class="status" id="connectionStatus">
+                <span class="emoji">🔄</span>Checking REAPNET connection...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check REAPNET connection status
+        function checkReapnetStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            // Simple check - in a real implementation, this would ping REAPNET
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '<span class="emoji">✅</span>Connected to REAPNET (localhost)';
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '<span class="emoji">❌</span>REAPNET not detected';
+            }
+        }
+
+        // Show pass generator
+        function showPassGenerator() {
+            const generator = document.getElementById('passGenerator');
+            generator.style.display = generator.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Generate wallet pass
+        async function generatePass() {
+            const kban = document.getElementById('kbanInput').value;
+            const deviceId = document.getElementById('deviceInput').value;
+            const statusDiv = document.getElementById('passStatus');
+
+            if (!kban) {
+                statusDiv.innerHTML = '<div class="status error">Please enter a K/BAN code</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="status">Generating pass...</div>';
+
+            try {
+                const response = await fetch('/api/reapnet-pass', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        kban: kban,
+                        deviceId: deviceId,
+                        reapnetId: 'web-interface'
+                    })
+                });
+
+                if (response.ok) {
+                    // Create download link
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reapnet-${kban}.pkpass`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    statusDiv.innerHTML = '<div class="status success">Pass generated! Check your downloads.</div>';
+                } else {
+                    throw new Error('Failed to generate pass');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">Error generating pass: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-detect device info
+        function detectDevice() {
+            const deviceInput = document.getElementById('deviceInput');
+            const userAgent = navigator.userAgent;
+            
+            if (/iPhone/.test(userAgent)) {
+                deviceInput.placeholder = 'iPhone detected';
+            } else if (/iPad/.test(userAgent)) {
+                deviceInput.placeholder = 'iPad detected';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkReapnetStatus();
+            detectDevice();
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAPNET Mobile Interface</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: 0 auto;
+            background: linear-gradient(135deg, #007AFF, #0051D5);
+            color: white;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .button {
+            display: block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: #FF9500;
+            border-color: #FF9500;
+        }
+        .button.primary:hover {
+            background: #FF8C00;
+        }
+        .input-group {
+            margin: 16px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: rgba(52, 199, 89, 0.2);
+            border: 1px solid rgba(52, 199, 89, 0.5);
+        }
+        .status.error {
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.5);
+        }
+        .emoji { font-size: 24px; margin-right: 8px; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1><span class="emoji">🔗</span>REAPNET Mobile</h1>
+        <p>Connect your iPhone to REAPNET for Apple Pay integration</p>
+    </div>
+
+    <div class="card">
+        <h2><span class="emoji">📱</span>Quick Setup</h2>
+        <div class="grid">
+            <a href="/api/reapnet-config" class="button primary">
+                📄 Install Config
+            </a>
+            <a href="#" onclick="showPassGenerator()" class="button">
+                🎫 Create Pass
+            </a>
+        </div>
+    </div>
+
+    <div class="card" id="passGenerator" style="display: none;">
+        <h3><span class="emoji">🎫</span>Generate Wallet Pass</h3>
+        <div class="input-group">
+            <label for="kbanInput">K/BAN Code:</label>
+            <input type="text" id="kbanInput" placeholder="Enter K/BAN code from REAPNET" />
+        </div>
+        <div class="input-group">
+            <label for="deviceInput">Device ID (Optional):</label>
+            <input type="text" id="deviceInput" placeholder="Your device identifier" />
+        </div>
+        <button onclick="generatePass()" class="button primary">
+            Generate Pass
+        </button>
+        <div id="passStatus"></div>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">ℹ️</span>Instructions</h3>
+        <ol style="padding-left: 20px;">
+            <li><strong>Install Config:</strong> Tap "Install Config" to add REAPNET to your home screen</li>
+            <li><strong>Create Pass:</strong> Enter K/BAN codes from REAPNET to generate wallet passes</li>
+            <li><strong>Use Passes:</strong> Generated passes will appear in Apple Wallet</li>
+            <li><strong>Apple Pay:</strong> Use passes for Apple Pay transactions</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">🔧</span>REAPNET Status</h3>
+        <div id="reapnetStatus">
+            <div class="status" id="connectionStatus">
+                <span class="emoji">🔄</span>Checking REAPNET connection...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check REAPNET connection status
+        function checkReapnetStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            // Simple check - in a real implementation, this would ping REAPNET
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '<span class="emoji">✅</span>Connected to REAPNET (localhost)';
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '<span class="emoji">❌</span>REAPNET not detected';
+            }
+        }
+
+        // Show pass generator
+        function showPassGenerator() {
+            const generator = document.getElementById('passGenerator');
+            generator.style.display = generator.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Generate wallet pass
+        async function generatePass() {
+            const kban = document.getElementById('kbanInput').value;
+            const deviceId = document.getElementById('deviceInput').value;
+            const statusDiv = document.getElementById('passStatus');
+
+            if (!kban) {
+                statusDiv.innerHTML = '<div class="status error">Please enter a K/BAN code</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="status">Generating pass...</div>';
+
+            try {
+                const response = await fetch('/api/reapnet-pass', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        kban: kban,
+                        deviceId: deviceId,
+                        reapnetId: 'web-interface'
+                    })
+                });
+
+                if (response.ok) {
+                    // Create download link
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reapnet-${kban}.pkpass`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    statusDiv.innerHTML = '<div class="status success">Pass generated! Check your downloads.</div>';
+                } else {
+                    throw new Error('Failed to generate pass');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">Error generating pass: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-detect device info
+        function detectDevice() {
+            const deviceInput = document.getElementById('deviceInput');
+            const userAgent = navigator.userAgent;
+            
+            if (/iPhone/.test(userAgent)) {
+                deviceInput.placeholder = 'iPhone detected';
+            } else if (/iPad/.test(userAgent)) {
+                deviceInput.placeholder = 'iPad detected';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkReapnetStatus();
+            detectDevice();
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAPNET Mobile Interface</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: 0 auto;
+            background: linear-gradient(135deg, #007AFF, #0051D5);
+            color: white;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .button {
+            display: block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: #FF9500;
+            border-color: #FF9500;
+        }
+        .button.primary:hover {
+            background: #FF8C00;
+        }
+        .input-group {
+            margin: 16px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: rgba(52, 199, 89, 0.2);
+            border: 1px solid rgba(52, 199, 89, 0.5);
+        }
+        .status.error {
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.5);
+        }
+        .emoji { font-size: 24px; margin-right: 8px; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1><span class="emoji">🔗</span>REAPNET Mobile</h1>
+        <p>Connect your iPhone to REAPNET for Apple Pay integration</p>
+    </div>
+
+    <div class="card">
+        <h2><span class="emoji">📱</span>Quick Setup</h2>
+        <div class="grid">
+            <a href="/api/reapnet-config" class="button primary">
+                📄 Install Config
+            </a>
+            <a href="#" onclick="showPassGenerator()" class="button">
+                🎫 Create Pass
+            </a>
+        </div>
+    </div>
+
+    <div class="card" id="passGenerator" style="display: none;">
+        <h3><span class="emoji">🎫</span>Generate Wallet Pass</h3>
+        <div class="input-group">
+            <label for="kbanInput">K/BAN Code:</label>
+            <input type="text" id="kbanInput" placeholder="Enter K/BAN code from REAPNET" />
+        </div>
+        <div class="input-group">
+            <label for="deviceInput">Device ID (Optional):</label>
+            <input type="text" id="deviceInput" placeholder="Your device identifier" />
+        </div>
+        <button onclick="generatePass()" class="button primary">
+            Generate Pass
+        </button>
+        <div id="passStatus"></div>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">ℹ️</span>Instructions</h3>
+        <ol style="padding-left: 20px;">
+            <li><strong>Install Config:</strong> Tap "Install Config" to add REAPNET to your home screen</li>
+            <li><strong>Create Pass:</strong> Enter K/BAN codes from REAPNET to generate wallet passes</li>
+            <li><strong>Use Passes:</strong> Generated passes will appear in Apple Wallet</li>
+            <li><strong>Apple Pay:</strong> Use passes for Apple Pay transactions</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">🔧</span>REAPNET Status</h3>
+        <div id="reapnetStatus">
+            <div class="status" id="connectionStatus">
+                <span class="emoji">🔄</span>Checking REAPNET connection...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check REAPNET connection status
+        function checkReapnetStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            // Simple check - in a real implementation, this would ping REAPNET
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '<span class="emoji">✅</span>Connected to REAPNET (localhost)';
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '<span class="emoji">❌</span>REAPNET not detected';
+            }
+        }
+
+        // Show pass generator
+        function showPassGenerator() {
+            const generator = document.getElementById('passGenerator');
+            generator.style.display = generator.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Generate wallet pass
+        async function generatePass() {
+            const kban = document.getElementById('kbanInput').value;
+            const deviceId = document.getElementById('deviceInput').value;
+            const statusDiv = document.getElementById('passStatus');
+
+            if (!kban) {
+                statusDiv.innerHTML = '<div class="status error">Please enter a K/BAN code</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="status">Generating pass...</div>';
+
+            try {
+                const response = await fetch('/api/reapnet-pass', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        kban: kban,
+                        deviceId: deviceId,
+                        reapnetId: 'web-interface'
+                    })
+                });
+
+                if (response.ok) {
+                    // Create download link
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reapnet-${kban}.pkpass`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    statusDiv.innerHTML = '<div class="status success">Pass generated! Check your downloads.</div>';
+                } else {
+                    throw new Error('Failed to generate pass');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">Error generating pass: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-detect device info
+        function detectDevice() {
+            const deviceInput = document.getElementById('deviceInput');
+            const userAgent = navigator.userAgent;
+            
+            if (/iPhone/.test(userAgent)) {
+                deviceInput.placeholder = 'iPhone detected';
+            } else if (/iPad/.test(userAgent)) {
+                deviceInput.placeholder = 'iPad detected';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkReapnetStatus();
+            detectDevice();
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAPNET Mobile Interface</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: 0 auto;
+            background: linear-gradient(135deg, #007AFF, #0051D5);
+            color: white;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .button {
+            display: block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: #FF9500;
+            border-color: #FF9500;
+        }
+        .button.primary:hover {
+            background: #FF8C00;
+        }
+        .input-group {
+            margin: 16px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: rgba(52, 199, 89, 0.2);
+            border: 1px solid rgba(52, 199, 89, 0.5);
+        }
+        .status.error {
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.5);
+        }
+        .emoji { font-size: 24px; margin-right: 8px; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1><span class="emoji">🔗</span>REAPNET Mobile</h1>
+        <p>Connect your iPhone to REAPNET for Apple Pay integration</p>
+    </div>
+
+    <div class="card">
+        <h2><span class="emoji">📱</span>Quick Setup</h2>
+        <div class="grid">
+            <a href="/api/reapnet-config" class="button primary">
+                📄 Install Config
+            </a>
+            <a href="#" onclick="showPassGenerator()" class="button">
+                🎫 Create Pass
+            </a>
+        </div>
+    </div>
+
+    <div class="card" id="passGenerator" style="display: none;">
+        <h3><span class="emoji">🎫</span>Generate Wallet Pass</h3>
+        <div class="input-group">
+            <label for="kbanInput">K/BAN Code:</label>
+            <input type="text" id="kbanInput" placeholder="Enter K/BAN code from REAPNET" />
+        </div>
+        <div class="input-group">
+            <label for="deviceInput">Device ID (Optional):</label>
+            <input type="text" id="deviceInput" placeholder="Your device identifier" />
+        </div>
+        <button onclick="generatePass()" class="button primary">
+            Generate Pass
+        </button>
+        <div id="passStatus"></div>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">ℹ️</span>Instructions</h3>
+        <ol style="padding-left: 20px;">
+            <li><strong>Install Config:</strong> Tap "Install Config" to add REAPNET to your home screen</li>
+            <li><strong>Create Pass:</strong> Enter K/BAN codes from REAPNET to generate wallet passes</li>
+            <li><strong>Use Passes:</strong> Generated passes will appear in Apple Wallet</li>
+            <li><strong>Apple Pay:</strong> Use passes for Apple Pay transactions</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">🔧</span>REAPNET Status</h3>
+        <div id="reapnetStatus">
+            <div class="status" id="connectionStatus">
+                <span class="emoji">🔄</span>Checking REAPNET connection...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check REAPNET connection status
+        function checkReapnetStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            // Simple check - in a real implementation, this would ping REAPNET
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '<span class="emoji">✅</span>Connected to REAPNET (localhost)';
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '<span class="emoji">❌</span>REAPNET not detected';
+            }
+        }
+
+        // Show pass generator
+        function showPassGenerator() {
+            const generator = document.getElementById('passGenerator');
+            generator.style.display = generator.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Generate wallet pass
+        async function generatePass() {
+            const kban = document.getElementById('kbanInput').value;
+            const deviceId = document.getElementById('deviceInput').value;
+            const statusDiv = document.getElementById('passStatus');
+
+            if (!kban) {
+                statusDiv.innerHTML = '<div class="status error">Please enter a K/BAN code</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="status">Generating pass...</div>';
+
+            try {
+                const response = await fetch('/api/reapnet-pass', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        kban: kban,
+                        deviceId: deviceId,
+                        reapnetId: 'web-interface'
+                    })
+                });
+
+                if (response.ok) {
+                    // Create download link
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reapnet-${kban}.pkpass`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    statusDiv.innerHTML = '<div class="status success">Pass generated! Check your downloads.</div>';
+                } else {
+                    throw new Error('Failed to generate pass');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">Error generating pass: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-detect device info
+        function detectDevice() {
+            const deviceInput = document.getElementById('deviceInput');
+            const userAgent = navigator.userAgent;
+            
+            if (/iPhone/.test(userAgent)) {
+                deviceInput.placeholder = 'iPhone detected';
+            } else if (/iPad/.test(userAgent)) {
+                deviceInput.placeholder = 'iPad detected';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkReapnetStatus();
+            detectDevice();
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAPNET Mobile Interface</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: 0 auto;
+            background: linear-gradient(135deg, #007AFF, #0051D5);
+            color: white;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .button {
+            display: block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: #FF9500;
+            border-color: #FF9500;
+        }
+        .button.primary:hover {
+            background: #FF8C00;
+        }
+        .input-group {
+            margin: 16px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: rgba(52, 199, 89, 0.2);
+            border: 1px solid rgba(52, 199, 89, 0.5);
+        }
+        .status.error {
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.5);
+        }
+        .emoji { font-size: 24px; margin-right: 8px; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1><span class="emoji">🔗</span>REAPNET Mobile</h1>
+        <p>Connect your iPhone to REAPNET for Apple Pay integration</p>
+    </div>
+
+    <div class="card">
+        <h2><span class="emoji">📱</span>Quick Setup</h2>
+        <div class="grid">
+            <a href="/api/reapnet-config" class="button primary">
+                📄 Install Config
+            </a>
+            <a href="#" onclick="showPassGenerator()" class="button">
+                🎫 Create Pass
+            </a>
+        </div>
+    </div>
+
+    <div class="card" id="passGenerator" style="display: none;">
+        <h3><span class="emoji">🎫</span>Generate Wallet Pass</h3>
+        <div class="input-group">
+            <label for="kbanInput">K/BAN Code:</label>
+            <input type="text" id="kbanInput" placeholder="Enter K/BAN code from REAPNET" />
+        </div>
+        <div class="input-group">
+            <label for="deviceInput">Device ID (Optional):</label>
+            <input type="text" id="deviceInput" placeholder="Your device identifier" />
+        </div>
+        <button onclick="generatePass()" class="button primary">
+            Generate Pass
+        </button>
+        <div id="passStatus"></div>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">ℹ️</span>Instructions</h3>
+        <ol style="padding-left: 20px;">
+            <li><strong>Install Config:</strong> Tap "Install Config" to add REAPNET to your home screen</li>
+            <li><strong>Create Pass:</strong> Enter K/BAN codes from REAPNET to generate wallet passes</li>
+            <li><strong>Use Passes:</strong> Generated passes will appear in Apple Wallet</li>
+            <li><strong>Apple Pay:</strong> Use passes for Apple Pay transactions</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">🔧</span>REAPNET Status</h3>
+        <div id="reapnetStatus">
+            <div class="status" id="connectionStatus">
+                <span class="emoji">🔄</span>Checking REAPNET connection...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check REAPNET connection status
+        function checkReapnetStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            // Simple check - in a real implementation, this would ping REAPNET
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '<span class="emoji">✅</span>Connected to REAPNET (localhost)';
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '<span class="emoji">❌</span>REAPNET not detected';
+            }
+        }
+
+        // Show pass generator
+        function showPassGenerator() {
+            const generator = document.getElementById('passGenerator');
+            generator.style.display = generator.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Generate wallet pass
+        async function generatePass() {
+            const kban = document.getElementById('kbanInput').value;
+            const deviceId = document.getElementById('deviceInput').value;
+            const statusDiv = document.getElementById('passStatus');
+
+            if (!kban) {
+                statusDiv.innerHTML = '<div class="status error">Please enter a K/BAN code</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="status">Generating pass...</div>';
+
+            try {
+                const response = await fetch('/api/reapnet-pass', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        kban: kban,
+                        deviceId: deviceId,
+                        reapnetId: 'web-interface'
+                    })
+                });
+
+                if (response.ok) {
+                    // Create download link
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reapnet-${kban}.pkpass`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    statusDiv.innerHTML = '<div class="status success">Pass generated! Check your downloads.</div>';
+                } else {
+                    throw new Error('Failed to generate pass');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">Error generating pass: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-detect device info
+        function detectDevice() {
+            const deviceInput = document.getElementById('deviceInput');
+            const userAgent = navigator.userAgent;
+            
+            if (/iPhone/.test(userAgent)) {
+                deviceInput.placeholder = 'iPhone detected';
+            } else if (/iPad/.test(userAgent)) {
+                deviceInput.placeholder = 'iPad detected';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkReapnetStatus();
+            detectDevice();
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAPNET Mobile Interface</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: 0 auto;
+            background: linear-gradient(135deg, #007AFF, #0051D5);
+            color: white;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .button {
+            display: block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: #FF9500;
+            border-color: #FF9500;
+        }
+        .button.primary:hover {
+            background: #FF8C00;
+        }
+        .input-group {
+            margin: 16px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: rgba(52, 199, 89, 0.2);
+            border: 1px solid rgba(52, 199, 89, 0.5);
+        }
+        .status.error {
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.5);
+        }
+        .emoji { font-size: 24px; margin-right: 8px; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1><span class="emoji">🔗</span>REAPNET Mobile</h1>
+        <p>Connect your iPhone to REAPNET for Apple Pay integration</p>
+    </div>
+
+    <div class="card">
+        <h2><span class="emoji">📱</span>Quick Setup</h2>
+        <div class="grid">
+            <a href="/api/reapnet-config" class="button primary">
+                📄 Install Config
+            </a>
+            <a href="#" onclick="showPassGenerator()" class="button">
+                🎫 Create Pass
+            </a>
+        </div>
+    </div>
+
+    <div class="card" id="passGenerator" style="display: none;">
+        <h3><span class="emoji">🎫</span>Generate Wallet Pass</h3>
+        <div class="input-group">
+            <label for="kbanInput">K/BAN Code:</label>
+            <input type="text" id="kbanInput" placeholder="Enter K/BAN code from REAPNET" />
+        </div>
+        <div class="input-group">
+            <label for="deviceInput">Device ID (Optional):</label>
+            <input type="text" id="deviceInput" placeholder="Your device identifier" />
+        </div>
+        <button onclick="generatePass()" class="button primary">
+            Generate Pass
+        </button>
+        <div id="passStatus"></div>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">ℹ️</span>Instructions</h3>
+        <ol style="padding-left: 20px;">
+            <li><strong>Install Config:</strong> Tap "Install Config" to add REAPNET to your home screen</li>
+            <li><strong>Create Pass:</strong> Enter K/BAN codes from REAPNET to generate wallet passes</li>
+            <li><strong>Use Passes:</strong> Generated passes will appear in Apple Wallet</li>
+            <li><strong>Apple Pay:</strong> Use passes for Apple Pay transactions</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">🔧</span>REAPNET Status</h3>
+        <div id="reapnetStatus">
+            <div class="status" id="connectionStatus">
+                <span class="emoji">🔄</span>Checking REAPNET connection...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check REAPNET connection status
+        function checkReapnetStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            // Simple check - in a real implementation, this would ping REAPNET
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '<span class="emoji">✅</span>Connected to REAPNET (localhost)';
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '<span class="emoji">❌</span>REAPNET not detected';
+            }
+        }
+
+        // Show pass generator
+        function showPassGenerator() {
+            const generator = document.getElementById('passGenerator');
+            generator.style.display = generator.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Generate wallet pass
+        async function generatePass() {
+            const kban = document.getElementById('kbanInput').value;
+            const deviceId = document.getElementById('deviceInput').value;
+            const statusDiv = document.getElementById('passStatus');
+
+            if (!kban) {
+                statusDiv.innerHTML = '<div class="status error">Please enter a K/BAN code</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="status">Generating pass...</div>';
+
+            try {
+                const response = await fetch('/api/reapnet-pass', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        kban: kban,
+                        deviceId: deviceId,
+                        reapnetId: 'web-interface'
+                    })
+                });
+
+                if (response.ok) {
+                    // Create download link
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reapnet-${kban}.pkpass`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    statusDiv.innerHTML = '<div class="status success">Pass generated! Check your downloads.</div>';
+                } else {
+                    throw new Error('Failed to generate pass');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">Error generating pass: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-detect device info
+        function detectDevice() {
+            const deviceInput = document.getElementById('deviceInput');
+            const userAgent = navigator.userAgent;
+            
+            if (/iPhone/.test(userAgent)) {
+                deviceInput.placeholder = 'iPhone detected';
+            } else if (/iPad/.test(userAgent)) {
+                deviceInput.placeholder = 'iPad detected';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkReapnetStatus();
+            detectDevice();
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAPNET Mobile Interface</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: 0 auto;
+            background: linear-gradient(135deg, #007AFF, #0051D5);
+            color: white;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .button {
+            display: block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: #FF9500;
+            border-color: #FF9500;
+        }
+        .button.primary:hover {
+            background: #FF8C00;
+        }
+        .input-group {
+            margin: 16px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: rgba(52, 199, 89, 0.2);
+            border: 1px solid rgba(52, 199, 89, 0.5);
+        }
+        .status.error {
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.5);
+        }
+        .emoji { font-size: 24px; margin-right: 8px; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1><span class="emoji">🔗</span>REAPNET Mobile</h1>
+        <p>Connect your iPhone to REAPNET for Apple Pay integration</p>
+    </div>
+
+    <div class="card">
+        <h2><span class="emoji">📱</span>Quick Setup</h2>
+        <div class="grid">
+            <a href="/api/reapnet-config" class="button primary">
+                📄 Install Config
+            </a>
+            <a href="#" onclick="showPassGenerator()" class="button">
+                🎫 Create Pass
+            </a>
+        </div>
+    </div>
+
+    <div class="card" id="passGenerator" style="display: none;">
+        <h3><span class="emoji">🎫</span>Generate Wallet Pass</h3>
+        <div class="input-group">
+            <label for="kbanInput">K/BAN Code:</label>
+            <input type="text" id="kbanInput" placeholder="Enter K/BAN code from REAPNET" />
+        </div>
+        <div class="input-group">
+            <label for="deviceInput">Device ID (Optional):</label>
+            <input type="text" id="deviceInput" placeholder="Your device identifier" />
+        </div>
+        <button onclick="generatePass()" class="button primary">
+            Generate Pass
+        </button>
+        <div id="passStatus"></div>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">ℹ️</span>Instructions</h3>
+        <ol style="padding-left: 20px;">
+            <li><strong>Install Config:</strong> Tap "Install Config" to add REAPNET to your home screen</li>
+            <li><strong>Create Pass:</strong> Enter K/BAN codes from REAPNET to generate wallet passes</li>
+            <li><strong>Use Passes:</strong> Generated passes will appear in Apple Wallet</li>
+            <li><strong>Apple Pay:</strong> Use passes for Apple Pay transactions</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h3><span class="emoji">🔧</span>REAPNET Status</h3>
+        <div id="reapnetStatus">
+            <div class="status" id="connectionStatus">
+                <span class="emoji">🔄</span>Checking REAPNET connection...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check REAPNET connection status
+        function checkReapnetStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            // Simple check - in a real implementation, this would ping REAPNET
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '<span class="emoji">✅</span>Connected to REAPNET (localhost)';
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '<span class="emoji">❌</span>REAPNET not detected';
+            }
+        }
+
+        // Show pass generator
+        function showPassGenerator() {
+            const generator = document.getElementById('passGenerator');
+            generator.style.display = generator.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Generate wallet pass
+        async function generatePass() {
+            const kban = document.getElementById('kbanInput').value;
+            const deviceId = document.getElementById('deviceInput').value;
+            const statusDiv = document.getElementById('passStatus');
+
+            if (!kban) {
+                statusDiv.innerHTML = '<div class="status error">Please enter a K/BAN code</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="status">Generating pass...</div>';
+
+            try {
+                const response = await fetch('/api/reapnet-pass', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        kban: kban,
+                        deviceId: deviceId,
+                        reapnetId: 'web-interface'
+                    })
+                });
+
+                if (response.ok) {
+                    // Create download link
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reapnet-${kban}.pkpass`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    statusDiv.innerHTML = '<div class="status success">Pass generated! Check your downloads.</div>';
+                } else {
+                    throw new Error('Failed to generate pass');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">Error generating pass: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-detect device info
+        function detectDevice() {
+            const deviceInput = document.getElementById('deviceInput');
+            const userAgent = navigator.userAgent;
+            
+            if (/iPhone/.test(userAgent)) {
+                deviceInput.placeholder = 'iPhone detected';
+            } else if (/iPad/.test(userAgent)) {
+                deviceInput.placeholder = 'iPad detected';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkReapnetStatus();
+            detectDevice();
+        });
+    </script>
+</body>
+</html>

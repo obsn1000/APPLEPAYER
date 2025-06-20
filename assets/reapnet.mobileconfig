@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadDisplayName</key>
+  <string>REAPNET Mobile Configuration</string>
+  <key>PayloadDescription</key>
+  <string>Configures iOS device for REAPNET Apple Pay integration and wallet pass management</string>
+  <key>PayloadIdentifier</key>
+  <string>com.reapnet.applepay.config</string>
+  <key>PayloadOrganization</key>
+  <string>REAPNET</string>
+  <key>PayloadRemovalDisallowed</key>
+  <false/>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>REAPNET-CONFIG-2024</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+  <key>PayloadContent</key>
+  <array>
+    <!-- Web Clip for REAPNET App -->
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.webClip.managed</string>
+      <key>PayloadIdentifier</key>
+      <string>com.reapnet.webclip</string>
+      <key>PayloadUUID</key>
+      <string>REAPNET-WEBCLIP-2024</string>
+      <key>PayloadDisplayName</key>
+      <string>REAPNET Web Clip</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>URL</key>
+      <string>http://localhost:3000</string>
+      <key>Label</key>
+      <string>REAPNET</string>
+      <key>IsRemovable</key>
+      <true/>
+      <key>FullScreen</key>
+      <true/>
+      <key>Precomposed</key>
+      <true/>
+    </dict>
+    
+    <!-- Restrictions for Apple Pay -->
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.applicationaccess</string>
+      <key>PayloadIdentifier</key>
+      <string>com.reapnet.restrictions</string>
+      <key>PayloadUUID</key>
+      <string>REAPNET-RESTRICTIONS-2024</string>
+      <key>PayloadDisplayName</key>
+      <string>REAPNET Restrictions</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>allowAppInstallation</key>
+      <true/>
+      <key>allowUIAppInstallation</key>
+      <true/>
+      <key>allowAppRemoval</key>
+      <true/>
+      <key>allowWalletAppInstallation</key>
+      <true/>
+      <key>allowPassbookRemoval</key>
+      <true/>
+      <key>allowApplePaySetup</key>
+      <true/>
+    </dict>
+    
+    <!-- Safari Settings for REAPNET -->
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.Safari</string>
+      <key>PayloadIdentifier</key>
+      <string>com.reapnet.safari</string>
+      <key>PayloadUUID</key>
+      <string>REAPNET-SAFARI-2024</string>
+      <key>PayloadDisplayName</key>
+      <string>REAPNET Safari Settings</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>AutoFillPasswords</key>
+      <true/>
+      <key>AutoFillCreditCardData</key>
+      <true/>
+      <key>SafariAllowAutoFill</key>
+      <true/>
+      <key>SafariAllowJavaScript</key>
+      <true/>
+      <key>SafariAllowPopups</key>
+      <false/>
+      <key>SafariAcceptCookies</key>
+      <integer>2</integer>
+    </dict>
+  </array>
+  
+  <!-- Custom properties for REAPNET -->
+  <key>ReapnetConfiguration</key>
+  <dict>
+    <key>Version</key>
+    <string>1.0</string>
+    <key>ConfiguredAt</key>
+    <string>2024-12-19</string>
+    <key>BaseURL</key>
+    <string>http://localhost:3000</string>
+    <key>Features</key>
+    <array>
+      <string>ApplePay</string>
+      <string>WalletPasses</string>
+      <string>WebClip</string>
+      <string>MobileOptimized</string>
+    </array>
+  </dict>
+</dict>
+</plist>
