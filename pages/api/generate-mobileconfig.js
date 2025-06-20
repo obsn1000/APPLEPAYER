@@ -14,7 +14,7 @@ export default function handler(req, res) {
 
     // For development - redirect to add to home screen instead of unsigned profile
     // This avoids signature validation issues
-    const baseUrl = req.headers.host ? `https://${req.headers.host}` : 'https://applepaysdk.vercel.app';
+    const baseUrl = req.headers.host ? `https://${req.headers.host}` : 'https://applepayer.vercel.app';
     
     // Return HTML with instructions instead of .mobileconfig
     const instructionHTML = `

@@ -12,7 +12,7 @@
 ### ✅ Domain Verification (Configured)
 - **Location**: `/home/kali/APPLEPAYER/public/.well-known/`
 - **File**: `apple-developer-merchantid-domain-association`
-- **Domain**: `reapwareapi.cc` (as configured in the association file)
+- **Domain**: `applepayer.vercel.app` (as configured in the association file)
 - **Team ID**: `YN229FU2KK`
 
 ### ✅ Application Configuration (Updated)
@@ -24,7 +24,7 @@
 ### 1. Domain Verification
 Apple will verify your domain by accessing:
 ```
-https://reapwareapi.cc/.well-known/apple-developer-merchantid-domain-association
+https://applepayer.vercel.app/.well-known/apple-developer-merchantid-domain-association
 ```
 
 ### 2. Certificate Verification
@@ -35,16 +35,16 @@ Once your domain is live, you can test Apple Pay functionality.
 
 ## Next Steps
 
-1. **Deploy your application** to `reapwareapi.cc`
-2. **Ensure HTTPS** is properly configured
+1. **Deploy your application** to `applepayer.vercel.app`
+2. **Ensure HTTPS** is properly configured (Vercel provides this automatically)
 3. **Test the domain verification** URL
 4. **Test Apple Pay** transactions
 
 ## Important Notes
 
-- Domain in association file: `reapwareapi.cc`
-- Make sure your application is deployed to this exact domain
-- HTTPS is required for Apple Pay
+- Domain in association file: `applepayer.vercel.app`
+- Application is deployed to Vercel at this domain
+- HTTPS is automatically provided by Vercel
 - The `.well-known` directory must be accessible via web server
 
 ## Files Summary
