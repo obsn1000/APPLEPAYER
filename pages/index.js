@@ -73,7 +73,7 @@ export default function Home() {
   // Process AMID data
   const processAmid = async () => {
     const input = document.getElementById('reapware-pass-input');
-    const amidData = input.value.trim();
+    let amidData = input.value.trim();
     
     if (!amidData) {
       setResultContent('<h3>❌ Please enter AMID data</h3>');
@@ -82,19 +82,63 @@ export default function Home() {
       return;
     }
 
+    // Clean up common JSON formatting issues
+    amidData = amidData
+      .replace(/'/g, '"')  // Replace single quotes with double quotes
+      .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')  // Add quotes around unquoted keys
+      .replace(/:\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*([,}])/g, ': "$1"$2')  // Add quotes around unquoted string values
+      .replace(/,\s*}/g, '}')  // Remove trailing commas
+      .replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+
     try {
       const parsedData = JSON.parse(amidData);
-      if (parsedData.amid) {
-        setResultContent(`<h3>✅ AMID Validated Successfully</h3><pre>${JSON.stringify(parsedData, null, 2)}</pre>`);
-        setResultType('success');
-        setShowResult(true);
-      } else {
+      
+      // Validate AMID structure
+      if (!parsedData.amid) {
         setResultContent('<h3>❌ Invalid AMID format</h3><p>Missing "amid" field in JSON data.</p>');
         setResultType('error');
         setShowResult(true);
+        return;
       }
+
+      // Validate AMID format (M + digits + dash + digits)
+      const amidPattern = /^M\d+-\d+$/;
+      if (!amidPattern.test(parsedData.amid)) {
+        setResultContent('<h3>❌ Invalid AMID format</h3><p>AMID should be in format: M[numbers]-[numbers]</p>');
+        setResultType('error');
+        setShowResult(true);
+        return;
+      }
+
+      // Success - show validated data
+      setResultContent(`<h3>✅ AMID Validated Successfully</h3>
+        <div style="margin: 15px 0;">
+          <strong>AMID:</strong> ${parsedData.amid}<br>
+          <strong>Account:</strong> ${parsedData.account_number || 'N/A'}<br>
+          <strong>Bank Code:</strong> ${parsedData.bank_code || 'N/A'}<br>
+          <strong>Status:</strong> ${parsedData.amid_isvalid || 'Unknown'}<br>
+          <strong>Merchant ID:</strong> ${parsedData.merchant_id || 'N/A'}
+        </div>
+        <details>
+          <summary>View Full JSON Data</summary>
+          <pre>${JSON.stringify(parsedData, null, 2)}</pre>
+        </details>`);
+      setResultType('success');
+      setShowResult(true);
+      
     } catch (error) {
-      setResultContent('<h3>❌ Invalid JSON format</h3><p>Please check your AMID data format.</p>');
+      setResultContent(`<h3>❌ Invalid JSON format</h3>
+        <p><strong>Error:</strong> ${error.message}</p>
+        <p><strong>Tips:</strong></p>
+        <ul>
+          <li>Make sure all keys and string values are in double quotes</li>
+          <li>Remove any trailing commas</li>
+          <li>Check for missing brackets or braces</li>
+        </ul>
+        <details>
+          <summary>Your Input (first 200 chars)</summary>
+          <pre>${amidData.substring(0, 200)}${amidData.length > 200 ? '...' : ''}</pre>
+        </details>`);
       setResultType('error');
       setShowResult(true);
     }
@@ -382,9 +426,19 @@ export default function Home() {
             <textarea 
               id="reapware-pass-input" 
               placeholder='Paste AMID JSON from reapware:
-{"amid": "M90160068-4578440258079768", "bank_name": "", "account_number": "0258079768", ...}'
+{
+  "amid": "M32662659-1976148969917405",
+  "bank_name": "",
+  "account_number": "8969917405",
+  "bank_code": "M32",
+  "country": "",
+  "checksum": "",
+  "bban": "",
+  "amid_isvalid": "Valid",
+  "merchant_id": "merchant.com.yourcompany.store"
+}'
               className="pass-input"
-              rows="4"
+              rows="6"
             ></textarea>
             <button id="process-pass-button" className="button" aria-label="Process Apple Pay AMID" onClick={processAmid}>
               <span aria-hidden="true">🔐</span> Validate AMID
