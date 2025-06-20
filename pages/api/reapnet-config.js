@@ -28,9 +28,9 @@ export default function handler(req, res) {
   <key>PayloadDisplayName</key>
   <string>REAPNET Mobile Configuration</string>
   <key>PayloadDescription</key>
-  <string>Configures iOS device for REAPNET Apple Pay integration, wallet pass management, and optimized mobile experience</string>
+  <string>Configures iOS device for REAPNET desktop application integration with Apple Pay and wallet pass management</string>
   <key>PayloadIdentifier</key>
-  <string>com.reapnet.applepay.config</string>
+  <string>com.reapnet.mobile.config</string>
   <key>PayloadOrganization</key>
   <string>REAPNET</string>
   <key>PayloadRemovalDisallowed</key>
@@ -38,7 +38,7 @@ export default function handler(req, res) {
   <key>PayloadType</key>
   <string>Configuration</string>
   <key>PayloadUUID</key>
-  <string>${configUUID}</string>
+  <string>REAPNET-MOBILE-CONFIG-2024</string>
   <key>PayloadVersion</key>
   <integer>1</integer>
   <key>PayloadContent</key>
@@ -48,11 +48,11 @@ export default function handler(req, res) {
       <key>PayloadType</key>
       <string>com.apple.webClip.managed</string>
       <key>PayloadIdentifier</key>
-      <string>com.reapnet.webclip</string>
+      <string>com.reapnet.webclip.main</string>
       <key>PayloadUUID</key>
-      <string>${webClipUUID}</string>
+      <string>REAPNET-WEBCLIP-MAIN-2024</string>
       <key>PayloadDisplayName</key>
-      <string>REAPNET App</string>
+      <string>REAPNET Mobile</string>
       <key>PayloadVersion</key>
       <integer>1</integer>
       <key>URL</key>

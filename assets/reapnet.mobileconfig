@@ -5,9 +5,9 @@
   <key>PayloadDisplayName</key>
   <string>REAPNET Mobile Configuration</string>
   <key>PayloadDescription</key>
-  <string>Configures iOS device for REAPNET Apple Pay integration and wallet pass management</string>
+  <string>Configures iOS device for REAPNET desktop application integration with Apple Pay and wallet pass management</string>
   <key>PayloadIdentifier</key>
-  <string>com.reapnet.applepay.config</string>
+  <string>com.reapnet.mobile.config</string>
   <key>PayloadOrganization</key>
   <string>REAPNET</string>
   <key>PayloadRemovalDisallowed</key>
@@ -15,27 +15,31 @@
   <key>PayloadType</key>
   <string>Configuration</string>
   <key>PayloadUUID</key>
-  <string>REAPNET-CONFIG-2024</string>
+  <string>REAPNET-MOBILE-CONFIG-2024</string>
   <key>PayloadVersion</key>
   <integer>1</integer>
   <key>PayloadContent</key>
   <array>
-    <!-- Web Clip for REAPNET App -->
+    <!-- Web Clip for REAPNET Integration -->
     <dict>
       <key>PayloadType</key>
       <string>com.apple.webClip.managed</string>
       <key>PayloadIdentifier</key>
-      <string>com.reapnet.webclip</string>
+      <string>com.reapnet.webclip.main</string>
       <key>PayloadUUID</key>
-      <string>REAPNET-WEBCLIP-2024</string>
+      <string>REAPNET-WEBCLIP-MAIN-2024</string>
       <key>PayloadDisplayName</key>
-      <string>REAPNET Web Clip</string>
+      <string>REAPNET Mobile</string>
       <key>PayloadVersion</key>
       <integer>1</integer>
       <key>URL</key>
       <string>http://localhost:3000</string>
       <key>Label</key>
       <string>REAPNET</string>
+      <key>Icon</key>
+      <data>
+        <!-- Base64 encoded icon data from REAPNET app -->
+      </data>
       <key>IsRemovable</key>
       <true/>
       <key>FullScreen</key>
@@ -44,16 +48,16 @@
       <true/>
     </dict>
     
-    <!-- Restrictions for Apple Pay -->
+    <!-- Apple Pay and Wallet Configuration -->
     <dict>
       <key>PayloadType</key>
       <string>com.apple.applicationaccess</string>
       <key>PayloadIdentifier</key>
-      <string>com.reapnet.restrictions</string>
+      <string>com.reapnet.applepay.access</string>
       <key>PayloadUUID</key>
-      <string>REAPNET-RESTRICTIONS-2024</string>
+      <string>REAPNET-APPLEPAY-ACCESS-2024</string>
       <key>PayloadDisplayName</key>
-      <string>REAPNET Restrictions</string>
+      <string>REAPNET Apple Pay Access</string>
       <key>PayloadVersion</key>
       <integer>1</integer>
       <key>allowAppInstallation</key>
@@ -68,6 +72,8 @@
       <true/>
       <key>allowApplePaySetup</key>
       <true/>
+      <key>allowApplePayModification</key>
+      <true/>
     </dict>
     
     <!-- Safari Settings for REAPNET -->
@@ -75,9 +81,9 @@
       <key>PayloadType</key>
       <string>com.apple.Safari</string>
       <key>PayloadIdentifier</key>
-      <string>com.reapnet.safari</string>
+      <string>com.reapnet.safari.settings</string>
       <key>PayloadUUID</key>
-      <string>REAPNET-SAFARI-2024</string>
+      <string>REAPNET-SAFARI-SETTINGS-2024</string>
       <key>PayloadDisplayName</key>
       <string>REAPNET Safari Settings</string>
       <key>PayloadVersion</key>
@@ -94,24 +100,55 @@
       <false/>
       <key>SafariAcceptCookies</key>
       <integer>2</integer>
+      <key>SafariBlockPopups</key>
+      <false/>
+      <key>SafariForceFraudWarning</key>
+      <false/>
+    </dict>
+    
+    <!-- Security and Privacy Settings -->
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.security.pkcs1</string>
+      <key>PayloadIdentifier</key>
+      <string>com.reapnet.security.settings</string>
+      <key>PayloadUUID</key>
+      <string>REAPNET-SECURITY-SETTINGS-2024</string>
+      <key>PayloadDisplayName</key>
+      <string>REAPNET Security Settings</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>AllowAllAppsAccess</key>
+      <true/>
     </dict>
   </array>
   
-  <!-- Custom properties for REAPNET -->
-  <key>ReapnetConfiguration</key>
+  <!-- REAPNET Specific Configuration -->
+  <key>REAPNETConfiguration</key>
   <dict>
     <key>Version</key>
-    <string>1.0</string>
+    <string>2.0.4</string>
+    <key>AppName</key>
+    <string>REAPNET</string>
     <key>ConfiguredAt</key>
-    <string>2024-12-19</string>
-    <key>BaseURL</key>
+    <string>2024-12-19T00:00:00Z</string>
+    <key>DesktopAppVersion</key>
+    <string>reapnet-nativefier-bae6c8</string>
+    <key>IntegrationURL</key>
     <string>http://localhost:3000</string>
     <key>Features</key>
     <array>
       <string>ApplePay</string>
       <string>WalletPasses</string>
-      <string>WebClip</string>
-      <string>MobileOptimized</string>
+      <string>KBANGeneration</string>
+      <string>MobileIntegration</string>
+      <string>DesktopSync</string>
+    </array>
+    <key>SupportedPlatforms</key>
+    <array>
+      <string>iOS</string>
+      <string>Linux</string>
+      <string>Electron</string>
     </array>
   </dict>
 </dict>

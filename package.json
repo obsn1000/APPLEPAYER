@@ -1,19 +1,25 @@
 {
-  "name": "apple-pay-sdk",
-  "version": "1.0.0",
-  "description": "SDK for Apple Pay integration and Apple Wallet passes",
+  "name": "reapnet-applepay-integration",
+  "version": "2.0.4",
+  "description": "REAPNET Apple Pay SDK integration and Apple Wallet passes for desktop application",
   "main": "index.js",
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "reapnet:bridge": "node reapnet-bridge.js",
+    "reapnet:test": "node test-reapnet-integration.js"
   },
   "keywords": [
+    "reapnet",
     "apple-pay",
     "wallet",
     "passkit",
-    "payment"
+    "payment",
+    "desktop-integration",
+    "electron",
+    "nativefier"
   ],
   "author": "",
   "license": "MIT",

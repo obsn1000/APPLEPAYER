@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
-  "passTypeIdentifier": "pass.com.applepaysdk.reapnet",
-  "teamIdentifier": "APPLEPAYSDK",
-  "organizationName": "ApplePaySDK",
-  "description": "REAPNET Wallet Pass",
+  "passTypeIdentifier": "pass.com.reapnet.wallet",
+  "teamIdentifier": "REAPNET",
+  "organizationName": "REAPNET",
+  "description": "REAPNET Desktop Integration Pass",
   "logoText": "REAPNET",
   "foregroundColor": "rgb(255, 255, 255)",
-  "backgroundColor": "rgb(0, 122, 255)",
+  "backgroundColor": "rgb(33, 150, 243)",
   "labelColor": "rgb(255, 255, 255)",
   "generic": {
     "primaryFields": [
@@ -25,7 +25,7 @@
       {
         "key": "source",
         "label": "SOURCE",
-        "value": "REAPNET"
+        "value": "REAPNET DESKTOP"
       }
     ],
     "auxiliaryFields": [
@@ -40,8 +40,15 @@
     "message": "PLACEHOLDER",
     "format": "PKBarcodeFormatQR",
     "messageEncoding": "iso-8859-1",
-    "altText": "REAPNET Pass"
+    "altText": "REAPNET Desktop Pass"
   },
   "webServiceURL": "http://localhost:3000/api/pass",
-  "authenticationToken": "PLACEHOLDER"
+  "authenticationToken": "PLACEHOLDER",
+  "appLaunchURL": "http://localhost:3000",
+  "userInfo": {
+    "source": "reapnet-desktop",
+    "version": "2.0.4",
+    "platform": "linux",
+    "integration": "applepayer"
+  }
 }
