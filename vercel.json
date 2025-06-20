@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "env": {
+    "NEXT_PUBLIC_API_KEY": "test_api_key_for_development",
+    "KBAN_API_KEY": "test_api_key_for_development"
+  }
+}
