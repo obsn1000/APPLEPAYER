@@ -150,15 +150,157 @@ export default function Home() {
     }
   };
 
-  // Simulate Apple Pay
-  const simulateApplePay = async () => {
-    setResultContent('<h3>🍎 Simulating Apple Pay...</h3><p>Processing payment request...</p>');
+  // Initialize Apple Pay and facilitate card addition
+  const initiateApplePayCardAddition = async () => {
+    setResultContent('<h3>🍎 Initializing Apple Pay...</h3><p>Checking Apple Pay availability...</p>');
     setResultType('success');
     setShowResult(true);
-    
-    setTimeout(() => {
-      setResultContent('<h3>✅ Apple Pay Simulation Complete</h3><p>Payment would be processed in a real environment.</p>');
-    }, 2000);
+
+    try {
+      // Check if Apple Pay is available
+      if (!window.ApplePaySession) {
+        setResultContent('<h3>❌ Apple Pay Not Available</h3><p>Apple Pay is not supported on this device or browser.</p>');
+        setResultType('error');
+        return;
+      }
+
+      // Check if Apple Pay can make payments
+      if (!ApplePaySession.canMakePayments()) {
+        setResultContent('<h3>❌ Apple Pay Not Set Up</h3><p>Apple Pay is available but not set up on this device.</p>');
+        setResultType('error');
+        return;
+      }
+
+      setResultContent('<h3>🔄 Creating Apple Pay Session...</h3><p>Preparing payment request...</p>');
+
+      // Create payment request to facilitate card addition
+      const paymentRequest = {
+        countryCode: 'US',
+        currencyCode: 'USD',
+        supportedNetworks: ['visa', 'masterCard', 'amex', 'discover'],
+        merchantCapabilities: ['supports3DS'],
+        total: {
+          label: 'Card Setup Verification',
+          amount: '0.01', // Minimal amount for card verification
+          type: 'final'
+        },
+        requiredBillingContactFields: ['postalAddress'],
+        requiredShippingContactFields: [],
+        shippingMethods: []
+      };
+
+      // Create Apple Pay session
+      const session = new ApplePaySession(3, paymentRequest);
+
+      // Handle merchant validation
+      session.onvalidatemerchant = async (event) => {
+        try {
+          setResultContent('<h3>🔐 Validating Merchant...</h3><p>Authenticating with Apple Pay...</p>');
+          
+          const response = await fetch('/api/validate-merchant', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-API-Key': 'your_api_key_here'
+            },
+            body: JSON.stringify({
+              validationURL: event.validationURL,
+              displayName: 'ApplePaySDK'
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Merchant validation failed');
+          }
+
+          const merchantSession = await response.json();
+          session.completeMerchantValidation(merchantSession.merchantSession);
+          
+          setResultContent('<h3>✅ Merchant Validated</h3><p>Ready to add card to Apple Pay...</p>');
+          
+        } catch (error) {
+          console.error('Merchant validation error:', error);
+          setResultContent(`<h3>❌ Merchant Validation Failed</h3><p>${error.message}</p>`);
+          setResultType('error');
+          session.abort();
+        }
+      };
+
+      // Handle payment method selection (card addition)
+      session.onpaymentmethodselected = (event) => {
+        setResultContent('<h3>💳 Card Selected</h3><p>Processing card information...</p>');
+        
+        // Update payment request with selected payment method
+        const update = {
+          newTotal: paymentRequest.total,
+          newLineItems: []
+        };
+        
+        session.completePaymentMethodSelection(update);
+      };
+
+      // Handle payment authorization (card verification)
+      session.onpaymentauthorized = async (event) => {
+        try {
+          setResultContent('<h3>🔄 Authorizing Payment...</h3><p>Verifying card with Apple Pay...</p>');
+          
+          const payment = event.payment;
+          
+          // Process the payment token for card addition
+          const response = await fetch('/api/process-apple-pay', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-API-Key': 'your_api_key_here'
+            },
+            body: JSON.stringify({
+              paymentToken: payment.token,
+              billingContact: payment.billingContact,
+              paymentMethod: payment.paymentMethod
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            session.completePayment(ApplePaySession.STATUS_SUCCESS);
+            setResultContent(`<h3>✅ Card Added Successfully</h3>
+              <div style="margin: 15px 0;">
+                <strong>Payment Method:</strong> ${payment.paymentMethod.displayName}<br>
+                <strong>Network:</strong> ${payment.paymentMethod.network}<br>
+                <strong>Type:</strong> ${payment.paymentMethod.type}<br>
+                <strong>Status:</strong> Active in Apple Pay Wallet
+              </div>
+              <p><em>Your card has been successfully added to Apple Pay and is ready for use.</em></p>`);
+            setResultType('success');
+          } else {
+            session.completePayment(ApplePaySession.STATUS_FAILURE);
+            setResultContent(`<h3>❌ Card Addition Failed</h3><p>${result.error}</p>`);
+            setResultType('error');
+          }
+          
+        } catch (error) {
+          console.error('Payment authorization error:', error);
+          session.completePayment(ApplePaySession.STATUS_FAILURE);
+          setResultContent(`<h3>❌ Authorization Failed</h3><p>${error.message}</p>`);
+          setResultType('error');
+        }
+      };
+
+      // Handle session cancellation
+      session.oncancel = () => {
+        setResultContent('<h3>⚠️ Apple Pay Cancelled</h3><p>Card addition was cancelled by user.</p>');
+        setResultType('error');
+      };
+
+      // Start the Apple Pay session
+      session.begin();
+      
+    } catch (error) {
+      console.error('Apple Pay initialization error:', error);
+      setResultContent(`<h3>❌ Apple Pay Error</h3><p>${error.message}</p>`);
+      setResultType('error');
+    }
   };
 
   // Download mobile config - CRITICAL FUNCTION
@@ -191,13 +333,70 @@ export default function Home() {
     }
   };
 
+  // Provision card to Apple Pay wallet via Reapware
+  const provisionCard = async () => {
+    const cardholderName = document.getElementById('cardholder-name')?.value?.trim();
+    const cardNumber = document.getElementById('card-number')?.value?.trim();
+    const expirationDate = document.getElementById('expiration-date')?.value?.trim();
+    const cvv = document.getElementById('cvv')?.value?.trim();
+
+    if (!cardholderName || !cardNumber || !expirationDate) {
+      setResultContent('<h3>❌ Missing Required Fields</h3><p>Please fill in cardholder name, card number, and expiration date.</p>');
+      setResultType('error');
+      setShowResult(true);
+      return;
+    }
+
+    try {
+      setResultContent('<h3>🔄 Provisioning Card to Apple Pay...</h3><p>Connecting to Reapware API...</p>');
+      setResultType('success');
+      setShowResult(true);
+
+      const response = await fetch('/api/provision-card', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-API-Key': 'your_api_key_here' // In production, this should be handled securely
+        },
+        body: JSON.stringify({
+          cardholderName,
+          primaryAccountNumber: cardNumber,
+          expirationDate,
+          cvv
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setResultContent(`<h3>✅ Card Provisioned Successfully</h3>
+          <div style="margin: 15px 0;">
+            <strong>AMID:</strong> ${result.amid?.amid || 'N/A'}<br>
+            <strong>Merchant ID:</strong> ${result.amid?.merchant_id || 'N/A'}<br>
+            <strong>Status:</strong> ${result.amid?.amid_isvalid || 'N/A'}<br>
+            <strong>Bank Code:</strong> ${result.amid?.bank_code || 'N/A'}
+          </div>
+          <p><em>Your card has been successfully added to Apple Pay wallet via Reapware API.</em></p>`);
+        setResultType('success');
+      } else {
+        setResultContent(`<h3>❌ Card Provisioning Failed</h3><p><strong>Error:</strong> ${result.error}</p>`);
+        setResultType('error');
+      }
+    } catch (error) {
+      setResultContent(`<h3>❌ Provisioning Error</h3><p>${error.message}</p>`);
+      setResultType('error');
+    }
+  };
+
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <meta name="description" content="ApplePaySDK Demo - Simulate Apple Pay, generate K/BAN codes, and download mobile configurations" />
-        <title>Apple Pay Demo</title>
+        <meta name="description" content="ApplePaySDK Demo - Add cards to Apple Pay, generate K/BAN codes, and download mobile configurations" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <title>Apple Pay Card Addition</title>
         <style>{`
           :root {
             --primary-color: #0070c9;
@@ -458,9 +657,9 @@ export default function Home() {
         </div>
 
         <div className="button-container">
-          <button id="pay-button" className="button" aria-label="Simulate Apple Pay payment" onClick={simulateApplePay}>
+          <button id="pay-button" className="button" aria-label="Add Card to Apple Pay" onClick={initiateApplePayCardAddition}>
             <span aria-hidden="true">🍎</span> 
-            Simulate Apple Pay
+            Add Card to Apple Pay
           </button>
 
           <button id="download-config-button" className="button" aria-label="Setup mobile access" onClick={downloadMobileConfig}>
