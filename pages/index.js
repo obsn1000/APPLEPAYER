@@ -9,6 +9,138 @@ export default function Home() {
   const [showResult, setShowResult] = useState(false);
   const [showActions, setShowActions] = useState(false);
 
+  // Generate a new K/BAN
+  const generateKban = async () => {
+    try {
+      setResultContent('Generating K/BAN...');
+      setResultType('success');
+      setShowResult(true);
+      
+      const response = await fetch('/api/kban/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      
+      if (data.kban) {
+        setGeneratedKban(data.kban);
+        setResultContent(`<h3>✅ K/BAN Generated Successfully</h3><pre>${data.kban}</pre>`);
+        setShowActions(true);
+      } else {
+        setResultContent('<h3>❌ Failed to generate K/BAN</h3>');
+        setResultType('error');
+      }
+    } catch (error) {
+      setResultContent(`<h3>❌ Error generating K/BAN</h3><p>${error.message}</p>`);
+      setResultType('error');
+    }
+  };
+
+  // Generate a PKPass for a K/BAN
+  const createPass = async (kban) => {
+    try {
+      setResultContent('Creating Apple Wallet pass...');
+      setResultType('success');
+      setShowResult(true);
+      
+      const response = await fetch('/api/pass/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kban })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${kban}.pkpass`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        
+        setResultContent('<h3>✅ Apple Wallet Pass Created</h3><p>Download should start automatically.</p>');
+      } else {
+        setResultContent('<h3>❌ Failed to generate PKPass</h3>');
+        setResultType('error');
+      }
+    } catch (error) {
+      setResultContent(`<h3>❌ Error creating pass</h3><p>${error.message}</p>`);
+      setResultType('error');
+    }
+  };
+
+  // Process AMID data
+  const processAmid = async () => {
+    const input = document.getElementById('reapware-pass-input');
+    const amidData = input.value.trim();
+    
+    if (!amidData) {
+      setResultContent('<h3>❌ Please enter AMID data</h3>');
+      setResultType('error');
+      setShowResult(true);
+      return;
+    }
+
+    try {
+      const parsedData = JSON.parse(amidData);
+      if (parsedData.amid) {
+        setResultContent(`<h3>✅ AMID Validated Successfully</h3><pre>${JSON.stringify(parsedData, null, 2)}</pre>`);
+        setResultType('success');
+        setShowResult(true);
+      } else {
+        setResultContent('<h3>❌ Invalid AMID format</h3><p>Missing "amid" field in JSON data.</p>');
+        setResultType('error');
+        setShowResult(true);
+      }
+    } catch (error) {
+      setResultContent('<h3>❌ Invalid JSON format</h3><p>Please check your AMID data format.</p>');
+      setResultType('error');
+      setShowResult(true);
+    }
+  };
+
+  // Simulate Apple Pay
+  const simulateApplePay = async () => {
+    setResultContent('<h3>🍎 Simulating Apple Pay...</h3><p>Processing payment request...</p>');
+    setResultType('success');
+    setShowResult(true);
+    
+    setTimeout(() => {
+      setResultContent('<h3>✅ Apple Pay Simulation Complete</h3><p>Payment would be processed in a real environment.</p>');
+    }, 2000);
+  };
+
+  // Download mobile config - CRITICAL FUNCTION
+  const downloadMobileConfig = async () => {
+    try {
+      setResultContent('Opening mobile setup instructions...');
+      setResultType('success');
+      setShowResult(true);
+      
+      // Open the mobile config page in a new window/tab
+      window.open('/api/generate-mobileconfig', '_blank');
+      
+      setResultContent('<h3>✅ Mobile Setup Instructions Opened</h3><p>A new tab has opened with mobile setup instructions. Follow the steps to add ApplePaySDK to your home screen.</p>');
+      
+    } catch (error) {
+      setResultContent(`<h3>❌ Error opening mobile setup</h3><p>${error.message}</p>`);
+      setResultType('error');
+    }
+  };
+
+  // Copy K/BAN to clipboard
+  const copyKban = async () => {
+    if (generatedKban) {
+      try {
+        await navigator.clipboard.writeText(generatedKban);
+        setResultContent(resultContent + '<p><strong>✅ K/BAN copied to clipboard!</strong></p>');
+      } catch (error) {
+        console.error('Failed to copy to clipboard:', error);
+      }
+    }
+  };
+
   return (
     <>
       <Head>
@@ -254,7 +386,7 @@ export default function Home() {
               className="pass-input"
               rows="4"
             ></textarea>
-            <button id="process-pass-button" className="button" aria-label="Process Apple Pay AMID">
+            <button id="process-pass-button" className="button" aria-label="Process Apple Pay AMID" onClick={processAmid}>
               <span aria-hidden="true">🔐</span> Validate AMID
             </button>
           </div>
@@ -266,16 +398,16 @@ export default function Home() {
         </div>
 
         <div className="button-container">
-          <button id="pay-button" className="button" aria-label="Simulate Apple Pay payment">
+          <button id="pay-button" className="button" aria-label="Simulate Apple Pay payment" onClick={simulateApplePay}>
             <span aria-hidden="true">🍎</span> 
             Simulate Apple Pay
           </button>
 
-          <button id="download-config-button" className="button" aria-label="Setup mobile access">
+          <button id="download-config-button" className="button" aria-label="Setup mobile access" onClick={downloadMobileConfig}>
             <span aria-hidden="true">📱</span> Setup Mobile Access
           </button>
           
-          <button id="generate-kban-button" className="button" aria-label="Generate a new K/BAN code">
+          <button id="generate-kban-button" className="button" aria-label="Generate a new K/BAN code" onClick={generateKban}>
             <span aria-hidden="true">🔑</span> Generate K/BAN
           </button>
         </div>
@@ -285,10 +417,10 @@ export default function Home() {
             <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(resultContent) }} />
             {showActions && (
               <div className="button-container">
-                <button id="create-pass-button" className="button" aria-label="Create Apple Wallet pass">
+                <button id="create-pass-button" className="button" aria-label="Create Apple Wallet pass" onClick={() => createPass(generatedKban)}>
                   Create Wallet Pass
                 </button>
-                <button id="copy-kban-button" className="button" aria-label="Copy K/BAN to clipboard">
+                <button id="copy-kban-button" className="button" aria-label="Copy K/BAN to clipboard" onClick={copyKban}>
                   Copy K/BAN
                 </button>
               </div>
